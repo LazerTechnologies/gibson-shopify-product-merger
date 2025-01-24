@@ -10,6 +10,15 @@ const CREATE_PRODUCT_MUTATION = `
       product {
         id
         title
+        description
+        images {
+          edges {
+            node {
+              id
+              url
+            }
+          }
+        }
       }
       userErrors {
         field
@@ -222,9 +231,11 @@ export async function POST(request: Request) {
             price: firstVariantData.price,
             sku: firstVariantData.sku,
             compareAtPrice: firstVariantData.compareAtPrice,
+            barcode: firstVariantData.barcode,
             inventoryPolicy: firstVariantData.inventoryPolicy,
             taxable: firstVariantData.taxable,
             inventoryQuantities: firstVariantData.inventoryQuantities,
+            imageSrc: firstVariantData.imageSrc,
           },
         },
       }),
@@ -288,6 +299,7 @@ export async function POST(request: Request) {
               price: v.price,
               sku: v.sku,
               compareAtPrice: v.compareAtPrice,
+              barcode: v.barcode,
               inventoryPolicy: v.inventoryPolicy,
               taxable: v.taxable,
               optionValues: [
@@ -297,6 +309,7 @@ export async function POST(request: Request) {
                 },
               ],
               inventoryQuantities: v.inventoryQuantities,
+              imageSrc: v.imageSrc,
             };
           }),
         },
