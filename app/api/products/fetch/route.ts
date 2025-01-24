@@ -15,6 +15,25 @@ const SIZE_PATTERNS = {
   "3XL": /\b(3XL|XXXL)\b/i,
 };
 
+interface MediaImage {
+  id: string;
+  alt?: string;
+  mediaContentType: string;
+  image: {
+    id: string;
+    url: string;
+    width: number;
+    height: number;
+  };
+}
+
+interface Metafield {
+  namespace: string;
+  key: string;
+  value: string;
+  type: string;
+};
+
 interface ProductVariant {
   id: string;
   sku: string;
@@ -26,7 +45,8 @@ interface ProductVariant {
   weightUnit: string;
   requiresShipping: boolean;
   taxable: boolean;
-}
+  metafields: Metafield[];
+};
 
 interface ProductNode {
   id: string;
@@ -38,28 +58,95 @@ interface ProductNode {
   publishedAt: string;
   productType: string;
   status: string;
+  description: string;
+  descriptionHtml: string;
+  tags: string[];
+  metafields: Metafield[];
+  seo: {
+    title: string;
+    description: string;
+  };
+  media: {
+    edges: {
+      node: MediaImage;
+    }[];
+  };
   variants: {
     edges: {
       node: ProductVariant;
     }[];
   };
-}
+};
 
 interface CombinedProduct {
   baseTitle: string;
   variants: {
     size: string;
     originalProduct: ProductNode;
+    price: string;
+    compareAtPrice: string | null;
+    sku: string;
+    barcode: string | null;
+    vendor: string;
+    productType: string;
+    tags: string[];
+    metafields: Metafield[];
+    weight: number;
+    weightUnit: string;
+    requiresShipping: boolean;
+    taxable: boolean;
+    inventoryQuantity: number;
   }[];
   vendor: string;
   productType: string;
-}
+  description: string;
+  price: string;
+  compareAtPrice: string | null;
+  sku: string;
+  barcode: string | null;
+  tags: string[] | [];
+  metafields: Metafield[];
+  media: MediaImage[];
+  seo: {
+    title: string;
+    description: string;
+  };
+};
 
 interface ShopifyProductInput {
   title: string;
   vendor: string;
   productType: string;
   status: "ACTIVE" | "DRAFT";
+  description: string;
+  price: string;
+  compareAtPrice?: string;
+  sku: string;
+  barcode?: string;
+  metafields?: Metafield[];
+  media?: MediaImage[];
+  seo?: {
+    title: string;
+    description: string;
+  };
+};
+
+interface ShopifyVariantInput {
+  productId: string;
+  variants: Array<{
+    options: [string]; // Size value
+    price: string;
+    sku?: string;
+    compareAtPrice?: string;
+    barcode?: string;
+    weight?: number;
+    weightUnit?: "KILOGRAMS" | "GRAMS" | "POUNDS" | "OUNCES";
+    requiresShipping: boolean;
+    taxable: boolean;
+    inventoryPolicy: "DENY" | "CONTINUE";
+    inventoryManagement: "SHOPIFY";
+    metafields?: Metafield[];
+  }>;
 }
 
 function extractBaseTitle(title: string): string {
@@ -95,6 +182,7 @@ function combineProducts(products: ProductNode[]): {
     }
 
     const baseTitle = extractBaseTitle(product.title);
+    const firstVariant = product.variants.edges[0]?.node;
 
     if (!productGroups.has(baseTitle)) {
       productGroups.set(baseTitle, {
@@ -102,6 +190,18 @@ function combineProducts(products: ProductNode[]): {
         variants: [],
         vendor: product.vendor,
         productType: product.productType,
+        description: product.descriptionHtml,
+        price: firstVariant?.price || "0.00",
+        compareAtPrice: firstVariant?.compareAtPrice || null,
+        sku: firstVariant?.sku || product.handle,
+        barcode: firstVariant?.barcode || null,
+        metafields: product.metafields,
+        tags: product?.tags || [],
+        media: product.media.edges.map(edge => edge.node),
+        seo: {
+          title: product.seo.title,
+          description: product.seo.description
+        }
       });
     }
 
@@ -109,6 +209,19 @@ function combineProducts(products: ProductNode[]): {
     group.variants.push({
       size,
       originalProduct: product,
+      price: firstVariant?.price || "0.00",
+      compareAtPrice: firstVariant?.compareAtPrice || null,
+      sku: firstVariant?.sku || product.handle,
+      barcode: firstVariant?.barcode || null,
+      vendor: product.vendor,
+      productType: product.productType,
+      tags: product?.tags || [],
+      metafields: product.metafields,
+      weight: firstVariant?.weight || 0,
+      weightUnit: firstVariant?.weightUnit || "KILOGRAMS",
+      requiresShipping: firstVariant?.requiresShipping || true,
+      taxable: firstVariant?.taxable || true,
+      inventoryQuantity: firstVariant?.inventoryQuantity || 0
     });
   });
 
@@ -124,7 +237,7 @@ function combineProducts(products: ProductNode[]): {
     combinedProducts,
     shopifyProducts,
   };
-};
+}
 
 function prepareProductForShopify(
   combined: CombinedProduct
@@ -134,8 +247,16 @@ function prepareProductForShopify(
     vendor: combined.vendor,
     productType: combined.productType,
     status: "DRAFT",
+    description: combined.description,
+    price: combined.price,
+    compareAtPrice: combined.compareAtPrice || undefined,
+    sku: combined.sku,
+    barcode: combined.barcode || undefined,
+    metafields: combined.metafields,
+    media: combined.media,
+    seo: combined.seo
   };
-};
+}
 
 async function getAllProducts() {
   console.log("Starting getAllProducts with GraphQL");
@@ -154,6 +275,38 @@ async function getAllProducts() {
             publishedAt
             productType
             status
+            description
+            descriptionHtml
+            tags
+            seo {
+              title
+              description
+            }
+            media(first: 60) {
+              edges {
+                node {
+                  ... on MediaImage {
+                    id
+                    mediaContentType
+                    image {
+                      id
+                      url
+                      width
+                      height
+                    }
+                    alt
+                  }
+                }
+              }
+            }
+            metafields(first: 40) {
+              nodes {
+                namespace
+                key
+                value
+                type
+              }
+            }
             variants(first: 1) {
               edges {
                 node {
@@ -167,6 +320,14 @@ async function getAllProducts() {
                   weightUnit
                   requiresShipping
                   taxable
+                  metafields(first: 28) {
+                    nodes {
+                      namespace
+                      key
+                      value
+                      type
+                    }
+                  }
                 }
               }
             }
@@ -213,11 +374,13 @@ async function getAllProducts() {
         const variantInfo = node.variants.edges[0]?.node || {};
         return {
           ...node,
+          metafields: node.metafields.nodes,
           variants: {
             edges: [
               {
                 node: {
                   ...variantInfo,
+                  metafields: variantInfo.metafields?.nodes || [],
                 },
               },
             ],

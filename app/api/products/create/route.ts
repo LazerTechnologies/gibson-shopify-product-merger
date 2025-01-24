@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import {NextResponse} from "next/server";
 
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;

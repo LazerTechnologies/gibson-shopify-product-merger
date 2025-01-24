@@ -1,6 +1,8 @@
 "use client";
-import { useState } from "react";
-import { Product } from "./types";
+import {useState} from "react";
+
+/** Types **/
+import type {Product} from "./types";
 
 export default function Home() {
   const [products, setProducts] = useState<any>(null);
@@ -8,7 +10,7 @@ export default function Home() {
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<"original" | "combined">("original");
   const [createResult, setCreateResult] = useState<any>(null);
-
+  
   async function loadProducts() {
     console.log("Starting to load products...");
     setIsLoading(true);
