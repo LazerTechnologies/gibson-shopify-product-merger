@@ -2,14 +2,13 @@ import {NextResponse} from "next/server";
 
 /** Types **/
 import type {
-  CombinedProduct, 
-  Metafield, 
-  MediaImage
-} from "@/lib/types/ProductData";
+  CombinedProduct,
+  Metafield,
+} from "@/lib/types/ShopifyData";
 
 /** Queries **/
 import {
-  mutationProductCreate, 
+  mutationProductCreate,
   mutationProductVariantsBulkCreate
 } from "@/queries";
 
@@ -18,33 +17,32 @@ import {
  * - Country Of Origin
  * - Get The Inventory For Each Location Of The Product - Get The Location ID
  */
-
 export async function POST(request: Request) {
   try {
-    const {products} = await request.json();
+    const {optionallyMergedProducts} = await request.json();
 
-    const mergedProductsResponse = await Promise.all(products?.map(async (product: CombinedProduct) => {
+    const mergedProductsResponse = await Promise.all(optionallyMergedProducts?.map(async (product: CombinedProduct) => {
 
       /** Create The Product Handle - Remove White Space And Replace With A Dash **/
-      const productHandle = product?.baseTitle?.replace(/\s+/g, '-');
+      const productHandle = product?.productData?.baseTitle?.replace(/\s+/g, '-');
 
       /** Create The Product Input For The Product Create Mutation **/
       const productCreateInput = {
-        media: product?.media?.length > 0 ? product?.media?.map((media: MediaImage) => ({
-          alt: media?.alt,
-          mediaContentType: media?.mediaContentType,
-          originalSource: media?.image?.url,
+        media: product?.productData?.media?.edges?.length > 0 ? product?.productData?.media?.edges?.map(media => ({
+          alt: media?.node?.alt,
+          mediaContentType: media?.node?.mediaContentType,
+          originalSource: media?.node?.image?.url,
         })) : null,
         input: {
-          title: product?.baseTitle,
-          descriptionHtml: product?.description,
+          title: product?.productData?.baseTitle,
+          descriptionHtml: product?.productData?.description,
           handle: productHandle,
-          productType: product?.productType,
+          productType: product?.productData?.productType,
           status: "DRAFT",
-          vendor: product?.vendor,
-          tags: product?.tags?.length > 0 ? product?.tags : null,
-          metafields: product?.metafields?.length > 0 ? 
-            product?.metafields?.map((metafield: Metafield) => ({
+          vendor: product?.productData?.vendor,
+          tags: product?.productData?.tags?.length > 0 ? product?.productData?.tags : null,
+          metafields: product?.productData?.metafields?.length > 0 ? 
+            product?.productData?.metafields?.map((metafield: Metafield) => ({
               namespace: metafield?.namespace,
               key: metafield?.key,
               value: metafield?.value,
@@ -52,19 +50,19 @@ export async function POST(request: Request) {
             }))
           : null,
           seo: {
-            title: product?.seo?.title,
-            description: product?.seo?.description,
+            title: product?.productData?.seo?.title,
+            description: product?.productData?.seo?.description,
           }
         }
       };
 
       /** Create The Structure For The Bulk Variant Input **/
-      const productVariantData = product?.variants?.length > 0 ? 
-        product?.variants?.map((variant) => ({
+      const productVariantData = product?.productData?.variants?.length > 0 ? 
+        product?.productData?.variants?.map((variant) => ({
           barcode: variant?.barcode ?? "",
           compareAtPrice: variant?.compareAtPrice ?? "",
           price: variant?.price ?? "",
-          taxable: variant?.taxable ?? true, // If The Value Is Not Populated, Should This Be Set To True Or False?
+          taxable: variant?.taxable ?? true,
           inventoryItem: {
             sku: variant?.sku,
             countryOfOrigin: null,
@@ -114,7 +112,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       { 
         message: "Products Created Successfully",
-        allProducts: products, 
+        allProducts: optionallyMergedProducts,
         updatedProducts: mergedProductsResponse,
       },
       {status: 200}

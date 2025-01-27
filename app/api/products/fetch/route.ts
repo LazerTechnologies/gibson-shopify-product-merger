@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 
 /** Types **/
-import type {ProductNode, LinkedProductGroup} from "@/lib/types/ShopifyData";
+import type {ProductNode, LinkedProductGroup, CombinedProduct} from "@/lib/types/ShopifyData";
 
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
@@ -9,14 +9,14 @@ const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2024-10/graphql.json`;
 
 /** Size patterns to match in titles **/
-const SIZE_PATTERNS = {
-  Small: /\b(Small|Sm|S)\b/i,
-  Medium: /\b(Medium|Med|M)\b/i,
-  Large: /\b(Large|L)\b/i,
-  "Extra Large": /\b(Extra Large|XLarge|XL)\b/i,
-  "2XL": /\b(2XL|XXL)\b/i,
-  "3XL": /\b(3XL|XXXL)\b/i,
-};
+// const SIZE_PATTERNS = {
+//   Small: /\b(Small|Sm|S)\b/i,
+//   Medium: /\b(Medium|Med|M)\b/i,
+//   Large: /\b(Large|L)\b/i,
+//   "Extra Large": /\b(Extra Large|XLarge|XL)\b/i,
+//   "2XL": /\b(2XL|XXL)\b/i,
+//   "3XL": /\b(3XL|XXXL)\b/i,
+// };
 
 /** Get the linked product groups from the products metafields **/
 const getLinkedProductGroups = (products: ProductNode[]): LinkedProductGroup[] => {
@@ -66,6 +66,80 @@ const getLinkedProductGroups = (products: ProductNode[]): LinkedProductGroup[] =
   }));
 };
 
+interface TitleParts {
+  titleParts: string[];
+  cleanTitle: string;
+  baseProduct: string;
+  color?: string;
+  size?: string;
+  optionallyMergedProducts?: CombinedProduct[];
+}
+
+const optionallyMergeCombinedProducts = (products: CombinedProduct[]): (CombinedProduct & {productData: TitleParts})[] => {
+  /** First pass - extract base names and organize by core product name **/
+  const baseNames = new Map<string, CombinedProduct[]>();
+  
+  products.forEach(product => {
+    const baseTitle = product.productData.baseTitle;
+    const normalizedBaseTitle = baseTitle.toLowerCase();
+    
+    if (!baseNames.has(normalizedBaseTitle)) {
+      baseNames.set(normalizedBaseTitle, []);
+    }
+    baseNames.get(normalizedBaseTitle)?.push(product);
+  });
+
+  /** Second pass - process each group **/
+  const mergedProducts: (CombinedProduct & {productData: TitleParts})[] = [];
+  
+  baseNames.forEach((groupProducts) => {
+    const mainProduct = groupProducts[0];
+    const title = mainProduct.productData.baseTitle;
+    const cleanTitle = title.replace(/^Lifestyle\s*/, '').trim();
+    
+    const titleParts: string[] = [];
+    let baseProduct = cleanTitle;
+    let color = '';
+    let size = '';
+    
+    // Extract base product name and color from parentheses
+    const baseAndColorMatch = cleanTitle.match(/^(.*?)\s*\((.*?)\)/);
+    if (baseAndColorMatch) {
+      baseProduct = baseAndColorMatch[1].trim();
+      color = baseAndColorMatch[2].trim();
+      titleParts.push(baseProduct);
+      titleParts.push(color);
+    } else {
+      titleParts.push(baseProduct);
+    }
+    
+    // Extract size if present
+    const sizeMatch = cleanTitle.match(/,\s*(.*?)\s*$/);
+    if (sizeMatch) {
+      size = sizeMatch[1].trim();
+      if (size) titleParts.push(size);
+    }
+
+    // Filter out the main product from optionally merged products
+    const optionallyMergedProducts = groupProducts.slice(1);
+
+    mergedProducts.push({
+      ...mainProduct,
+      productData: {
+        ...mainProduct.productData,
+        titleParts,
+        cleanTitle: titleParts.join(' - '),
+        baseProduct,
+        color,
+        size,
+        optionallyMergedProducts
+      }
+    });
+  });
+
+  return mergedProducts;
+};
+
 const combineProducts = (products: ProductNode[], linkedGroups: LinkedProductGroup[]) => {
 
   if (!linkedGroups.length) {
@@ -109,6 +183,7 @@ const combineProducts = (products: ProductNode[], linkedGroups: LinkedProductGro
 
           return {
             size: '',
+            productTitle: product?.title,
             price: productVariant.price,
             compareAtPrice: productVariant.compareAtPrice,
             sku: productVariant.sku,
@@ -230,7 +305,7 @@ async function getAllProducts() {
     try {
       console.log("Fetching products with cursor:", cursor);
 
-      const response = await fetch(GRAPHQL_ENDPOINT, {
+      const response: Response = await fetch(GRAPHQL_ENDPOINT, {
         method: "POST",
         headers: {
           "X-Shopify-Access-Token": ACCESS_TOKEN!,
@@ -250,7 +325,7 @@ async function getAllProducts() {
 
       const { data } = await response.json();
 
-      const products = data.products.edges.map((edge: any) => {
+      const products = data.products.edges.map((edge) => {
         const node = edge.node;
         const variantInfo = node.variants.edges[0]?.node || {};
         return {
@@ -282,9 +357,11 @@ async function getAllProducts() {
 
   const linkedGroups = getLinkedProductGroups(allProducts);
   const combinedProducts = combineProducts(allProducts, linkedGroups);
+  const optionallyMergedProducts = optionallyMergeCombinedProducts(combinedProducts);
 
   return {
     originalProducts: allProducts,
+    optionallyMergedProducts: optionallyMergedProducts,
     combinedProducts: combinedProducts,
     linkedGroups: linkedGroups
   };

@@ -86,19 +86,23 @@ export interface CombinedProduct {
     status: string;
     description: string;
     tags: string[];
-    metafields: any[];
+    metafields: Metafield[];
     seo: {
       title: string;
       description: string;
     };
-    media: any;
+    media: {
+      edges: {
+        node: MediaImage;
+      }[];
+    };
     variants: {
       size: string;
       price: string;
       compareAtPrice: string | null;
       sku: string;
       barcode: string | null;
-      metafields: any[];
+      metafields: Metafield[];
       weight: number;
       weightUnit: string;
       requiresShipping: boolean;
