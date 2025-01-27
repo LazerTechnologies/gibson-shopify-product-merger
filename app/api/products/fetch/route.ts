@@ -1,11 +1,14 @@
 import {NextResponse} from "next/server";
 
+/** Types **/
+import type {ProductNode, LinkedProductGroup} from "@/lib/types/ShopifyData";
+
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 
-const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2024-01/graphql.json`;
+const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2024-10/graphql.json`;
 
-// Size patterns to match in titles
+/** Size patterns to match in titles **/
 const SIZE_PATTERNS = {
   Small: /\b(Small|Sm|S)\b/i,
   Medium: /\b(Medium|Med|M)\b/i,
@@ -15,248 +18,118 @@ const SIZE_PATTERNS = {
   "3XL": /\b(3XL|XXXL)\b/i,
 };
 
-interface MediaImage {
-  id: string;
-  alt?: string;
-  mediaContentType: string;
-  image: {
-    id: string;
-    url: string;
-    width: number;
-    height: number;
-  };
-}
+/** Get the linked product groups from the products metafields **/
+const getLinkedProductGroups = (products: ProductNode[]): LinkedProductGroup[] => {
+  const linkedGroupsMap = new Map<string, Set<string>>();
 
-interface Metafield {
-  namespace: string;
-  key: string;
-  value: string;
-  type: string;
-};
+  /** Loop through all products **/
+  products.forEach(product => {
 
-interface ProductVariant {
-  id: string;
-  sku: string;
-  price: string;
-  compareAtPrice: string | null;
-  inventoryQuantity: number;
-  barcode: string | null;
-  weight: number;
-  weightUnit: string;
-  requiresShipping: boolean;
-  taxable: boolean;
-  metafields: Metafield[];
-};
+    const linkedProductsMetafield = product.metafields.find(meta => 
+      meta.key === "linked_products" && 
+      meta.type === "metaobject_reference"
+    );
 
-interface ProductNode {
-  id: string;
-  title: string;
-  vendor: string;
-  handle: string;
-  createdAt: string;
-  updatedAt: string;
-  publishedAt: string;
-  productType: string;
-  status: string;
-  description: string;
-  descriptionHtml: string;
-  tags: string[];
-  metafields: Metafield[];
-  seo: {
-    title: string;
-    description: string;
-  };
-  media: {
-    edges: {
-      node: MediaImage;
-    }[];
-  };
-  variants: {
-    edges: {
-      node: ProductVariant;
-    }[];
-  };
-};
+    if (linkedProductsMetafield?.reference) {
+      try {
+        const metaobjectId = linkedProductsMetafield.reference.id;
+        
+        /** Find the linked_product_groups field in the reference fields **/
+        const linkedProductsField = linkedProductsMetafield.reference.fields.find(
+          field => field.key === "linked_product_group"
+        );
 
-interface CombinedProduct {
-  baseTitle: string;
-  variants: {
-    size: string;
-    originalProduct: ProductNode;
-    price: string;
-    compareAtPrice: string | null;
-    sku: string;
-    barcode: string | null;
-    vendor: string;
-    productType: string;
-    tags: string[];
-    metafields: Metafield[];
-    weight: number;
-    weightUnit: string;
-    requiresShipping: boolean;
-    taxable: boolean;
-    inventoryQuantity: number;
-  }[];
-  vendor: string;
-  productType: string;
-  description: string;
-  price: string;
-  compareAtPrice: string | null;
-  sku: string;
-  barcode: string | null;
-  tags: string[] | [];
-  metafields: Metafield[];
-  media: MediaImage[];
-  seo: {
-    title: string;
-    description: string;
-  };
-};
+        if (metaobjectId && linkedProductsField?.value) {
+          /** Parse the linked product IDs from the field value **/
+          const linkedIds = JSON.parse(linkedProductsField.value) as string[];
 
-interface ShopifyProductInput {
-  title: string;
-  vendor: string;
-  productType: string;
-  status: "ACTIVE" | "DRAFT";
-  description: string;
-  price: string;
-  compareAtPrice?: string;
-  sku: string;
-  barcode?: string;
-  metafields?: Metafield[];
-  media?: MediaImage[];
-  seo?: {
-    title: string;
-    description: string;
-  };
-};
-
-interface ShopifyVariantInput {
-  productId: string;
-  variants: Array<{
-    options: [string]; // Size value
-    price: string;
-    sku?: string;
-    compareAtPrice?: string;
-    barcode?: string;
-    weight?: number;
-    weightUnit?: "KILOGRAMS" | "GRAMS" | "POUNDS" | "OUNCES";
-    requiresShipping: boolean;
-    taxable: boolean;
-    inventoryPolicy: "DENY" | "CONTINUE";
-    inventoryManagement: "SHOPIFY";
-    metafields?: Metafield[];
-  }>;
-}
-
-function extractBaseTitle(title: string): string {
-  // Remove size patterns from title
-  let baseTitle = title;
-  Object.entries(SIZE_PATTERNS).forEach(([_, pattern]) => {
-    baseTitle = baseTitle.replace(pattern, "");
-  });
-  // Clean up any remaining artifacts
-  return baseTitle.replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
-}
-
-function findSize(title: string): string | null {
-  for (const [sizeName, pattern] of Object.entries(SIZE_PATTERNS)) {
-    if (pattern.test(title)) {
-      return sizeName;
-    }
-  }
-  return null;
-}
-
-function combineProducts(products: ProductNode[]): {
-  combinedProducts: CombinedProduct[];
-  shopifyProducts: ShopifyProductInput[];
-} {
-  const productGroups = new Map<string, CombinedProduct>();
-
-  products.forEach((product) => {
-    const size = findSize(product.title);
-    if (!size) {
-      console.log(`No size found for product: ${product.title}`);
-      return;
-    }
-
-    const baseTitle = extractBaseTitle(product.title);
-    const firstVariant = product.variants.edges[0]?.node;
-
-    if (!productGroups.has(baseTitle)) {
-      productGroups.set(baseTitle, {
-        baseTitle,
-        variants: [],
-        vendor: product.vendor,
-        productType: product.productType,
-        description: product.descriptionHtml,
-        price: firstVariant?.price || "0.00",
-        compareAtPrice: firstVariant?.compareAtPrice || null,
-        sku: firstVariant?.sku || product.handle,
-        barcode: firstVariant?.barcode || null,
-        metafields: product.metafields,
-        tags: product?.tags || [],
-        media: product.media.edges.map(edge => edge.node),
-        seo: {
-          title: product.seo.title,
-          description: product.seo.description
+          /** If this metaobject ID isn't in our map yet, initialize it **/
+          if (!linkedGroupsMap.has(metaobjectId)) {
+            linkedGroupsMap.set(metaobjectId, new Set<string>());
+          }
+          
+          /** Add all linked product IDs to the Set for this metaobject **/
+          linkedIds.forEach(id => {
+            linkedGroupsMap.get(metaobjectId)?.add(id);
+          });
         }
-      });
+      } catch (error) {
+        console.error("Error processing linked products metaobject:", error);
+      }
     }
-
-    const group = productGroups.get(baseTitle)!;
-    group.variants.push({
-      size,
-      originalProduct: product,
-      price: firstVariant?.price || "0.00",
-      compareAtPrice: firstVariant?.compareAtPrice || null,
-      sku: firstVariant?.sku || product.handle,
-      barcode: firstVariant?.barcode || null,
-      vendor: product.vendor,
-      productType: product.productType,
-      tags: product?.tags || [],
-      metafields: product.metafields,
-      weight: firstVariant?.weight || 0,
-      weightUnit: firstVariant?.weightUnit || "KILOGRAMS",
-      requiresShipping: firstVariant?.requiresShipping || true,
-      taxable: firstVariant?.taxable || true,
-      inventoryQuantity: firstVariant?.inventoryQuantity || 0
-    });
   });
 
-  // Convert map to array and filter out products with only one variant
-  const combinedProducts = Array.from(productGroups.values())
-    .filter((group) => group.variants.length > 1)
-    .sort((a, b) => a.baseTitle.localeCompare(b.baseTitle));
+  /** Convert the Map to the desired array format **/
+  return Array.from(linkedGroupsMap.entries()).map(([metaobjectId, productIds]) => ({
+    metaobjectId,
+    linkedProductIds: Array.from(productIds)
+  }));
+};
 
-  // Prepare Shopify-formatted products
-  const shopifyProducts = combinedProducts.map(prepareProductForShopify);
+const combineProducts = (products: ProductNode[], linkedGroups: LinkedProductGroup[]) => {
 
-  return {
-    combinedProducts,
-    shopifyProducts,
-  };
-}
+  if (!linkedGroups.length) {
+    return [];
+  }
 
-function prepareProductForShopify(
-  combined: CombinedProduct
-): ShopifyProductInput {
-  return {
-    title: combined.baseTitle,
-    vendor: combined.vendor,
-    productType: combined.productType,
-    status: "DRAFT",
-    description: combined.description,
-    price: combined.price,
-    compareAtPrice: combined.compareAtPrice || undefined,
-    sku: combined.sku,
-    barcode: combined.barcode || undefined,
-    metafields: combined.metafields,
-    media: combined.media,
-    seo: combined.seo
-  };
-}
+  if (!products.length) {
+    return [];
+  }
+
+  const combinedProducts = linkedGroups.map((group) => {
+    const linkedProducts = products.filter(product => 
+      group.linkedProductIds.includes(product.id)
+    );
+
+    if (!linkedProducts.length) {
+      return null;
+    }
+
+    const firstProduct = linkedProducts[0];
+
+    return {
+      productData: {
+        baseTitle: firstProduct.title,
+        vendor: firstProduct.vendor,
+        createdAt: firstProduct.createdAt,
+        updatedAt: firstProduct.updatedAt,
+        publishedAt: firstProduct.publishedAt,
+        productType: firstProduct.productType,
+        status: firstProduct.status,
+        description: firstProduct.description,
+        tags: firstProduct.tags,
+        metafields: firstProduct.metafields,
+        seo: {
+          title: firstProduct.seo.title,
+          description: firstProduct.seo.description,
+        },
+        media: firstProduct.media,
+        variants: linkedProducts.map((product) => {
+          const productVariant = product.variants.edges[0].node;
+
+          return {
+            size: '',
+            price: productVariant.price,
+            compareAtPrice: productVariant.compareAtPrice,
+            sku: productVariant.sku,
+            barcode: productVariant.barcode,
+            metafields: productVariant.metafields,
+            weight: productVariant.weight,
+            weightUnit: productVariant.weightUnit,
+            requiresShipping: productVariant.requiresShipping,
+            taxable: productVariant.taxable ?? true,
+            inventoryQuantity: productVariant.inventoryQuantity,
+          };
+        }),
+      }
+    };
+  })
+  .filter((group): group is NonNullable<typeof group> => 
+    group !== null && group.productData.variants.length > 1
+  );
+
+  return combinedProducts;
+};
 
 async function getAllProducts() {
   console.log("Starting getAllProducts with GraphQL");
@@ -305,6 +178,17 @@ async function getAllProducts() {
                 key
                 value
                 type
+                reference {
+                  ...on Metaobject {
+                    id
+                    type
+                    fields {
+                      key
+                      value
+                      type
+                    }
+                  }
+                }
               }
             }
             variants(first: 1) {
@@ -316,9 +200,6 @@ async function getAllProducts() {
                   compareAtPrice
                   inventoryQuantity
                   barcode
-                  weight
-                  weightUnit
-                  requiresShipping
                   taxable
                   metafields(first: 28) {
                     nodes {
@@ -397,16 +278,15 @@ async function getAllProducts() {
     }
   }
 
-  console.log("Total Lifestyle products found:", allProducts.length);
+  console.log("Total Lifestyle products found: ", allProducts.length);
 
-  // Combine products with variants
-  const { combinedProducts, shopifyProducts } = combineProducts(allProducts);
-  console.log("Combined products:", combinedProducts[0]);
+  const linkedGroups = getLinkedProductGroups(allProducts);
+  const combinedProducts = combineProducts(allProducts, linkedGroups);
 
   return {
     originalProducts: allProducts,
     combinedProducts: combinedProducts,
-    shopifyProducts: shopifyProducts,
+    linkedGroups: linkedGroups
   };
 }
 

@@ -2,7 +2,13 @@
 import {useState, useEffect} from "react";
 
 /** Types **/
-import type {ProductsResponse} from "@/lib/types/ProductData";
+import type {ProductNode, LinkedProductGroup, CombinedProduct} from "@/lib/types/ShopifyData";
+
+interface ProductsResponse {
+  originalProducts: ProductNode[];
+  combinedProducts: CombinedProduct[];
+  linkedGroups: LinkedProductGroup[];
+}
 
 export default function UpdateProducts() {
   const [products, setProducts] = useState<ProductsResponse | null>(null);
@@ -25,7 +31,7 @@ export default function UpdateProducts() {
       if (data?.combinedProducts) {
         const initialOpenStates = data.combinedProducts.reduce((
           acc: {[key: number]: boolean}, 
-          _item: any, 
+          _: CombinedProduct, 
           index: number
         ) => {
           acc[index] = true;
@@ -77,7 +83,7 @@ export default function UpdateProducts() {
       <main className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-white">
-            Update Products Route
+            Products To Combine
           </h1>
           {products ? (
             <button
@@ -100,21 +106,23 @@ export default function UpdateProducts() {
         {products && (
           <div className="space-y-8">
             <h2 className="text-2xl font-semibold text-white">Combined Products ({products.combinedProducts.length})</h2>
-            {products.combinedProducts.map((product, index) => (
+            {products.combinedProducts.map((group, index) => (
               <div key={index} className="border border-gray-700 rounded-lg p-4 space-y-4 bg-[#1a1a1a]">
                 <div 
                   className="flex justify-between items-start cursor-pointer"
                   onClick={() => setOpenStates(prev => ({...prev, [index]: !prev[index]}))}
                 >
                   <div className="flex flex-col gap-[8px]">
-                  <h3 className="text-xl font-medium text-white">{product.baseTitle}</h3>
+                    <h3 className="text-xl font-medium text-white">
+                      {group.productData.baseTitle || "Untitled Group"}
+                    </h3>
                     <div className="flex items-center gap-4">
                       <div className="text-sm text-gray-400">
                         <p className="font-medium mb-[5px]">
-                          Vendor: {product.vendor}
+                          Vendor: {group.productData.vendor}
                         </p>
                         <p className="font-medium">
-                          Type: {product.productType}
+                          Type: {group.productData.productType}
                         </p>
                       </div>
                     </div>
@@ -129,45 +137,29 @@ export default function UpdateProducts() {
                   </svg>
                 </div>
                 <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openStates[index] ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                  {product.metafields && product.metafields.length > 0 && (
-                    <div className="bg-[#262626] p-3 rounded">
-                      <h4 className="font-medium mb-2 text-white">Metafields</h4>
-                      <div className="grid grid-cols-3 gap-2 text-sm">
-                        {product.metafields.map((meta, idx) => (
-                          <div key={idx} className="border border-gray-700 p-2 rounded bg-[#1a1a1a]">
-                            <p className="font-medium text-white">{meta.namespace}: {meta.key}</p>
-                            <p className="text-gray-400 truncate">{meta.value}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                   <div className="pt-[10px]">
-                    <h4 className="font-medium mb-2 text-white">Variants ({product.variants.length})</h4>
+                    <h4 className="font-medium mb-2 text-white">Variants ({group.productData.variants.length})</h4>
                     <div className="grid gap-3">
-                      {product.variants.map((variant, idx) => (
+                      {group.productData.variants.map((variant, idx) => (
                         <div key={idx} className="border border-gray-700 p-3 rounded bg-[#262626]">
                           <div className="flex flex-col gap-2 mb-2">
                             <div className="flex justify-between items-center">
-                              <span className="font-medium text-white text-lg">{variant.originalProduct.title}</span>
-                              <span className="text-gray-400 text-sm">
-                                SKU: {variant.originalProduct.variants.edges[0]?.node.sku}
+                              <span className="font-medium text-white text-lg">
+                                {group.productData.baseTitle} - {variant?.size}
                               </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="px-2 py-1 bg-gray-700 rounded text-sm font-medium text-white">
-                                Size: {variant.size}
+                              <span className="text-gray-400 text-sm">
+                                SKU: {variant.sku}
                               </span>
                             </div>
                           </div>
                           <div className="text-sm grid grid-cols-2 gap-2 text-gray-300">
-                            <p>Price: ${variant.originalProduct.variants.edges[0]?.node.price}</p>
-                            <p>Inventory: {variant.originalProduct.variants.edges[0]?.node.inventoryQuantity}</p>
-                            {variant.originalProduct.variants.edges[0]?.node.compareAtPrice && (
-                              <p>Compare at: ${variant.originalProduct.variants.edges[0]?.node.compareAtPrice}</p>
+                            <p>Price: ${variant.price}</p>
+                            <p>Inventory: {variant.inventoryQuantity}</p>
+                            {variant.compareAtPrice && (
+                              <p>Compare at: ${variant.compareAtPrice}</p>
                             )}
-                            {variant.originalProduct.variants.edges[0]?.node.barcode && (
-                              <p>Barcode: {variant.originalProduct.variants.edges[0]?.node.barcode}</p>
+                            {variant.barcode && (
+                              <p>Barcode: {variant.barcode}</p>
                             )}
                           </div>
                         </div>

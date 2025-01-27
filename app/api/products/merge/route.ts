@@ -16,7 +16,7 @@ import {
 /** 
  * Data Missing
  * - Country Of Origin
- * - 
+ * - Get The Inventory For Each Location Of The Product - Get The Location ID
  */
 
 export async function POST(request: Request) {
@@ -25,8 +25,10 @@ export async function POST(request: Request) {
 
     const mergedProductsResponse = await Promise.all(products?.map(async (product: CombinedProduct) => {
 
+      /** Create The Product Handle - Remove White Space And Replace With A Dash **/
       const productHandle = product?.baseTitle?.replace(/\s+/g, '-');
 
+      /** Create The Product Input For The Product Create Mutation **/
       const productCreateInput = {
         media: product?.media?.length > 0 ? product?.media?.map((media: MediaImage) => ({
           alt: media?.alt,
@@ -56,16 +58,13 @@ export async function POST(request: Request) {
         }
       };
 
-      /** 
-       * We will need to await the response from the productCreate mutation
-       * and then use the productId to bulk create the variants
-       */
-
-      const productVariantsInput = product?.variants?.length > 0 ? 
+      /** Create The Structure For The Bulk Variant Input **/
+      const productVariantData = product?.variants?.length > 0 ? 
         product?.variants?.map((variant) => ({
-          barcode: variant?.barcode,
-          compareAtPrice: variant?.compareAtPrice ?? null,
-          price: variant?.price,
+          barcode: variant?.barcode ?? "",
+          compareAtPrice: variant?.compareAtPrice ?? "",
+          price: variant?.price ?? "",
+          taxable: variant?.taxable ?? true, // If The Value Is Not Populated, Should This Be Set To True Or False?
           inventoryItem: {
             sku: variant?.sku,
             countryOfOrigin: null,
@@ -91,9 +90,24 @@ export async function POST(request: Request) {
         }))
       : null;
 
+      /** Make A Request To Create The Product **/
+      // To Do: Create The Product
+
+      /** If The Request Fails, Return The Error And Don't Create The Product Variants **/
+      // To Do: Return The Error
+
+      /** Create The Product Variant Input For The Product Variants Bulk Create Mutation **/
+      const productVariantInput = {
+        productId: "",
+        variants: productVariantData,
+      };
+
+      /** Run The Mutation To Create The Product Variants **/
+      // To Do: Create The Product Variants
+
       return {
         productCreateInput: productCreateInput,
-        productVariantsInput: productVariantsInput,
+        productVariantsInput: productVariantInput,
       };
     }));
 
