@@ -144,9 +144,23 @@ export default function UpdateProducts() {
                         <div key={idx} className="border border-gray-700 p-3 rounded bg-[#262626]">
                           <div className="flex flex-col gap-2 mb-2">
                             <div className="flex justify-between items-center">
-                              <span className="font-medium text-white text-lg">
-                                {group.productData.baseTitle} - {variant?.size}
-                              </span>
+                              <div>
+                                <span className="font-medium text-white text-lg block mb-2">
+                                  {group.productData.baseTitle}
+                                </span>
+                                <div className="flex gap-2">
+                                  {variant.size && (
+                                    <span className="px-2 py-1 text-xs bg-[#000435] text-white rounded">
+                                      {variant.size}
+                                    </span>
+                                  )}
+                                  {variant.color && (
+                                    <span className="px-2 py-1 text-xs bg-[#000435] text-white rounded">
+                                      {variant.color}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
                               <span className="text-gray-400 text-sm">
                                 SKU: {variant.sku}
                               </span>

@@ -78,6 +78,7 @@ export interface LinkedProductGroup {
 export interface CombinedProduct {
   productData: {
     baseTitle: string;
+    title: string;
     vendor: string;
     createdAt: string;
     updatedAt: string;
@@ -98,6 +99,9 @@ export interface CombinedProduct {
     };
     variants: {
       size: string;
+      color: string; // Added based on processTitle function
+      productTitle: string;
+      title: string;
       price: string;
       compareAtPrice: string | null;
       sku: string;

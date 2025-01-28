@@ -1,169 +1,141 @@
 import {NextResponse} from "next/server";
+import * as fs from 'node:fs/promises';
+import path from 'path';
 
 /** Types **/
-import type {ProductNode, LinkedProductGroup, CombinedProduct} from "@/lib/types/ShopifyData";
-
-const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
-const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
-
-const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2024-10/graphql.json`;
+import type {ProductNode} from "@/lib/types/ShopifyData";
 
 /** Size patterns to match in titles **/
-// const SIZE_PATTERNS = {
-//   Small: /\b(Small|Sm|S)\b/i,
-//   Medium: /\b(Medium|Med|M)\b/i,
-//   Large: /\b(Large|L)\b/i,
-//   "Extra Large": /\b(Extra Large|XLarge|XL)\b/i,
-//   "2XL": /\b(2XL|XXL)\b/i,
-//   "3XL": /\b(3XL|XXXL)\b/i,
-// };
-
-/** Get the linked product groups from the products metafields **/
-const getLinkedProductGroups = (products: ProductNode[]): LinkedProductGroup[] => {
-  const linkedGroupsMap = new Map<string, Set<string>>();
-
-  /** Loop through all products **/
-  products.forEach(product => {
-
-    const linkedProductsMetafield = product.metafields.find(meta => 
-      meta.key === "linked_products" && 
-      meta.type === "metaobject_reference"
-    );
-
-    if (linkedProductsMetafield?.reference) {
-      try {
-        const metaobjectId = linkedProductsMetafield.reference.id;
-        
-        /** Find the linked_product_groups field in the reference fields **/
-        const linkedProductsField = linkedProductsMetafield.reference.fields.find(
-          field => field.key === "linked_product_group"
-        );
-
-        if (metaobjectId && linkedProductsField?.value) {
-          /** Parse the linked product IDs from the field value **/
-          const linkedIds = JSON.parse(linkedProductsField.value) as string[];
-
-          /** If this metaobject ID isn't in our map yet, initialize it **/
-          if (!linkedGroupsMap.has(metaobjectId)) {
-            linkedGroupsMap.set(metaobjectId, new Set<string>());
-          }
-          
-          /** Add all linked product IDs to the Set for this metaobject **/
-          linkedIds.forEach(id => {
-            linkedGroupsMap.get(metaobjectId)?.add(id);
-          });
-        }
-      } catch (error) {
-        console.error("Error processing linked products metaobject:", error);
-      }
-    }
-  });
-
-  /** Convert the Map to the desired array format **/
-  return Array.from(linkedGroupsMap.entries()).map(([metaobjectId, productIds]) => ({
-    metaobjectId,
-    linkedProductIds: Array.from(productIds)
-  }));
+const SIZE_PATTERNS = {
+  "3XL": /\b(3XL|XXXL)\b/i,
+  "2XL": /\b(2XL|XXL)\b/i,
+  "Extra Large": /\b(Extra Large|XLarge|X-Large|XL)\b/i,
+  Large: /\b(Large|L)\b/i,
+  Medium: /\b(Medium|Med|M)\b/i,
+  Small: /\b(Small|Sm|S)\b/i,
 };
 
-interface TitleParts {
-  titleParts: string[];
-  cleanTitle: string;
-  baseProduct: string;
-  color?: string;
-  size?: string;
-  optionallyMergedProducts?: CombinedProduct[];
-}
-
-const optionallyMergeCombinedProducts = (products: CombinedProduct[]): (CombinedProduct & {productData: TitleParts})[] => {
-  /** First pass - extract base names and organize by core product name **/
-  const baseNames = new Map<string, CombinedProduct[]>();
-  
-  products.forEach(product => {
-    const baseTitle = product.productData.baseTitle;
-    const normalizedBaseTitle = baseTitle.toLowerCase();
-    
-    if (!baseNames.has(normalizedBaseTitle)) {
-      baseNames.set(normalizedBaseTitle, []);
-    }
-    baseNames.get(normalizedBaseTitle)?.push(product);
-  });
-
-  /** Second pass - process each group **/
-  const mergedProducts: (CombinedProduct & {productData: TitleParts})[] = [];
-  
-  baseNames.forEach((groupProducts) => {
-    const mainProduct = groupProducts[0];
-    const title = mainProduct.productData.baseTitle;
-    const cleanTitle = title.replace(/^Lifestyle\s*/, '').trim();
-    
-    const titleParts: string[] = [];
-    let baseProduct = cleanTitle;
-    let color = '';
-    let size = '';
-    
-    // Extract base product name and color from parentheses
-    const baseAndColorMatch = cleanTitle.match(/^(.*?)\s*\((.*?)\)/);
-    if (baseAndColorMatch) {
-      baseProduct = baseAndColorMatch[1].trim();
-      color = baseAndColorMatch[2].trim();
-      titleParts.push(baseProduct);
-      titleParts.push(color);
-    } else {
-      titleParts.push(baseProduct);
-    }
-    
-    // Extract size if present
-    const sizeMatch = cleanTitle.match(/,\s*(.*?)\s*$/);
-    if (sizeMatch) {
-      size = sizeMatch[1].trim();
-      if (size) titleParts.push(size);
-    }
-
-    // Filter out the main product from optionally merged products
-    const optionallyMergedProducts = groupProducts.slice(1);
-
-    mergedProducts.push({
-      ...mainProduct,
-      productData: {
-        ...mainProduct.productData,
-        titleParts,
-        cleanTitle: titleParts.join(' - '),
-        baseProduct,
-        color,
-        size,
-        optionallyMergedProducts
-      }
-    });
-  });
-
-  return mergedProducts;
+/** Color patterns to match in product titles **/
+const TITLE_COLOR_PATTERNS = {
+  White: /\b(White|Wht)\b/i,
+  "Vintage White": /\b(Vintage White)\b/i,
+  Black: /\b(Black|Blk)\b/i,
+  "Vintage Black": /\b(Vintage Black)\b/i,
+  "Faded Black": /\b(Faded Black)\b/i,
+  "Black Heather": /\b(Black Heather)\b/i,
+  Gray: /\b(Gray|Gry)\b/i,
+  Grey: /\b(Grey)\b/i,
+  "Carbon Grey": /\b(Carbon Grey)\b/i,
+  "Heathered Gray": /\b(Heathered Gray)\b/i,
+  Crimson: /\b(Crimson|Crim)\b/i,
+  Red: /\b(Red|Rd)\b/i,
+  Green: /\b(Green)\b/i,
+  "Army Green": /\b(Army Green)\b/i,
+  Olive: /\b(Olive)\b/i,
+  Charcoal: /\b(Charcoal)\b/i,
+  Blue: /\b(Blue)\b/i,
+  "Sky Blue": /\b(Sky Blue)\b/i,
+  "Dark Brown": /\b(Dark Brown)\b/i,
+  Orange: /\b(Orange)\b/i,
+  Cream: /\b(Cream)\b/i,
+  Oatmeal: /\b(Oatmeal)\b/i,
 };
 
-const combineProducts = (products: ProductNode[], linkedGroups: LinkedProductGroup[]) => {
+/** Color patterns to match in SKUs **/
+const SKU_COLOR_PATTERNS = {
+  White: /WHT/i,
+  Black: /BLK/i,
+  Grey: /GRY/i,
+  Red: /RED/i,
+  Green: /GRN/i,
+  Olive: /OLV/i,
+  Blue: /(?:BLU|TL)/i,
+  "Dark Brown": /BRN/i,
+  Orange: /ORG/i,
+  Cream: /CRM/i,
+};
 
-  if (!linkedGroups.length) {
-    return [];
+/** Clean title and extract size/color helper function **/
+const processTitle = (title: string, sku: string): { 
+  cleanedTitle: string;
+  size: string;
+  color: string;
+} => {
+  let workingTitle = title;
+  let foundSize = '';
+  let foundColor = '';
+
+  /** Find size match - now ordered from largest to smallest to avoid partial matches **/
+  for (const [size, pattern] of Object.entries(SIZE_PATTERNS)) {
+    if (pattern.test(workingTitle)) {
+      foundSize = size;
+      workingTitle = workingTitle.replace(pattern, '');
+      break;
+    }
   }
 
-  if (!products.length) {
-    return [];
+  /** Find color match from title first **/
+  for (const [color, pattern] of Object.entries(TITLE_COLOR_PATTERNS)) {
+    if (pattern.test(workingTitle)) {
+      foundColor = color;
+      workingTitle = workingTitle.replace(pattern, '');
+      break;
+    }
   }
 
-  const combinedProducts = linkedGroups.map((group) => {
-    const linkedProducts = products.filter(product => 
-      group.linkedProductIds.includes(product.id)
+  /** If no color found in title, check SKU **/
+  if (!foundColor && sku) {
+    for (const [color, pattern] of Object.entries(SKU_COLOR_PATTERNS)) {
+      if (pattern.test(sku)) {
+        foundColor = color;
+        break;
+      }
+    }
+  }
+
+  /** Clean remaining title **/
+  const cleanedTitle = workingTitle
+    .replace(/[^a-zA-Z0-9\s]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return {
+    cleanedTitle,
+    size: foundSize,
+    color: foundColor
+  };
+};
+
+/** Combine similar products into product groups with variants **/
+const combineProducts = (products: ProductNode[]) => {
+  /** Group products by their cleaned title **/
+  const productsByTitle = new Map<string, ProductNode[]>();
+
+  /** Process each product and group by cleaned title **/
+  products.forEach(product => {
+    const {cleanedTitle} = processTitle(
+      product.title, 
+      product?.variants?.edges?.[0]?.node?.sku
     );
 
-    if (!linkedProducts.length) {
+    if (!productsByTitle.has(cleanedTitle)) {
+      productsByTitle.set(cleanedTitle, []);
+    }
+    productsByTitle.get(cleanedTitle)?.push(product);
+  });
+
+  /** Create combined products for groups with multiple variants **/
+  const combinedProducts = Array.from(productsByTitle.entries()).map(([cleanedTitle, groupedProducts]) => {
+    if (groupedProducts.length <= 1) {
       return null;
-    }
+    };
 
-    const firstProduct = linkedProducts[0];
+    const firstProduct = groupedProducts[0];
 
     return {
       productData: {
-        baseTitle: firstProduct.title,
+        baseTitle: cleanedTitle,
+        title: firstProduct.title,
         vendor: firstProduct.vendor,
         createdAt: firstProduct.createdAt,
         updatedAt: firstProduct.updatedAt,
@@ -178,12 +150,16 @@ const combineProducts = (products: ProductNode[], linkedGroups: LinkedProductGro
           description: firstProduct.seo.description,
         },
         media: firstProduct.media,
-        variants: linkedProducts.map((product) => {
+        variants: groupedProducts.map((product) => {
           const productVariant = product.variants.edges[0].node;
 
+          const {size, color} = processTitle(product.title, productVariant?.sku);
+
           return {
-            size: '',
-            productTitle: product?.title,
+            size,
+            color,
+            productTitle: cleanedTitle,
+            title: product?.title || '',
             price: productVariant.price,
             compareAtPrice: productVariant.compareAtPrice,
             sku: productVariant.sku,
@@ -198,8 +174,7 @@ const combineProducts = (products: ProductNode[], linkedGroups: LinkedProductGro
         }),
       }
     };
-  })
-  .filter((group): group is NonNullable<typeof group> => 
+  }).filter((group): group is NonNullable<typeof group> => 
     group !== null && group.productData.variants.length > 1
   );
 
@@ -207,164 +182,21 @@ const combineProducts = (products: ProductNode[], linkedGroups: LinkedProductGro
 };
 
 async function getAllProducts() {
-  console.log("Starting getAllProducts with GraphQL");
+  const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'products-cache.json');
 
-  const query = `
-    query GetLifestyleProducts($cursor: String) {
-      products(first: 250, query: "vendor:Lifestyle", after: $cursor) {
-        edges {
-          node {
-            id
-            title
-            vendor
-            handle
-            createdAt
-            updatedAt
-            publishedAt
-            productType
-            status
-            description
-            descriptionHtml
-            tags
-            seo {
-              title
-              description
-            }
-            media(first: 60) {
-              edges {
-                node {
-                  ... on MediaImage {
-                    id
-                    mediaContentType
-                    image {
-                      id
-                      url
-                      width
-                      height
-                    }
-                    alt
-                  }
-                }
-              }
-            }
-            metafields(first: 40) {
-              nodes {
-                namespace
-                key
-                value
-                type
-                reference {
-                  ...on Metaobject {
-                    id
-                    type
-                    fields {
-                      key
-                      value
-                      type
-                    }
-                  }
-                }
-              }
-            }
-            variants(first: 1) {
-              edges {
-                node {
-                  id
-                  sku
-                  price
-                  compareAtPrice
-                  inventoryQuantity
-                  barcode
-                  taxable
-                  metafields(first: 28) {
-                    nodes {
-                      namespace
-                      key
-                      value
-                      type
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-      }
-    }
-  `;
+  /** Read and parse the cached data **/
+  const fileContent = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
+  const cachedData = JSON.parse(fileContent);
+  const allProducts = cachedData.data;
 
-  let allProducts: ProductNode[] = [];
-  let hasNextPage = true;
-  let cursor: string | null = null;
-
-  while (hasNextPage) {
-    try {
-      console.log("Fetching products with cursor:", cursor);
-
-      const response: Response = await fetch(GRAPHQL_ENDPOINT, {
-        method: "POST",
-        headers: {
-          "X-Shopify-Access-Token": ACCESS_TOKEN!,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query,
-          variables: { cursor },
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error("Error response:", errorText);
-        throw new Error(`Failed to fetch products: ${response.status}`);
-      }
-
-      const { data } = await response.json();
-
-      const products = data.products.edges.map((edge) => {
-        const node = edge.node;
-        const variantInfo = node.variants.edges[0]?.node || {};
-        return {
-          ...node,
-          metafields: node.metafields.nodes,
-          variants: {
-            edges: [
-              {
-                node: {
-                  ...variantInfo,
-                  metafields: variantInfo.metafields?.nodes || [],
-                },
-              },
-            ],
-          },
-        };
-      });
-      allProducts = [...allProducts, ...products];
-
-      hasNextPage = data.products.pageInfo.hasNextPage;
-      cursor = data.products.pageInfo.endCursor;
-    } catch (error) {
-      console.error("Error in GraphQL fetch:", error);
-      throw error;
-    }
-  }
-
-  console.log("Total Lifestyle products found: ", allProducts.length);
-
-  const linkedGroups = getLinkedProductGroups(allProducts);
-  const combinedProducts = combineProducts(allProducts, linkedGroups);
-  const optionallyMergedProducts = optionallyMergeCombinedProducts(combinedProducts);
-
-  return {
+  const combinedProducts = combineProducts(allProducts);
+  
+  const result = {
     originalProducts: allProducts,
-    optionallyMergedProducts: optionallyMergedProducts,
     combinedProducts: combinedProducts,
-    linkedGroups: linkedGroups
   };
+
+  return result;
 }
 
 export async function GET() {
