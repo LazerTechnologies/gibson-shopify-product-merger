@@ -5,6 +5,15 @@ import path from 'path';
 /** Types **/
 import type {ProductNode} from "@/lib/types/ShopifyData";
 
+/** Utils **/
+import {getAllShopifyProducts} from "@/lib/utils";
+
+const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
+const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
+const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2024-10/graphql.json`;
+const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'products-cache.json');
+const CACHE_DURATION = 1000 * 60 * 60; /** 1 hour in milliseconds **/
+
 /** Size patterns to match in titles **/
 const SIZE_PATTERNS = {
   "3XL": /\b(3XL|XXXL)\b/i,
@@ -106,13 +115,144 @@ const processTitle = (title: string, sku: string): {
   };
 };
 
+/** Clean up remaining products and attempt additional merging **/
+const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
+
+  /** Try to group remaining products by similar titles **/
+  const remainingGroups = new Map<string, ProductNode[]>();
+  
+  remainingProducts.forEach(product => {
+    /** Check linked products metafield first **/
+    const linkedProductsMetafield = product.metafields.find(meta => 
+      meta.key === "linked_products" && 
+      meta.type === "metaobject_reference"
+    );
+
+    if (linkedProductsMetafield?.reference) {
+      const linkedProductsField = linkedProductsMetafield.reference.fields.find(
+        field => field.key === "linked_product_group"
+      );
+
+      if (linkedProductsField?.value) {
+        try {
+          const linkedIds = JSON.parse(linkedProductsField.value) as string[];
+
+          /** Skip if less than 2 linked products **/
+          if (linkedIds.length > 1) {
+            return;
+          }
+        } catch (error) {
+          console.error(`Error parsing linked products:`, error);
+        }
+      }
+    }
+
+    const {cleanedTitle} = processTitle(
+      product.title,
+      product.variants.edges[0].node.sku
+    );
+
+    /** Try to find existing groups with similar titles **/
+    let foundMatch = false;
+    for (const [existingTitle, group] of remainingGroups.entries()) {
+      /** Check if titles are similar (you can adjust the similarity threshold) **/
+      if (
+        existingTitle.toLowerCase().includes(cleanedTitle.toLowerCase()) || 
+        cleanedTitle.toLowerCase().includes(existingTitle.toLowerCase())
+      ) {
+        group.push(product);
+        foundMatch = true;
+        break;
+      }
+    }
+
+    if (!foundMatch) {
+      remainingGroups.set(cleanedTitle, [product]);
+    }
+  });
+
+  /** Filter out groups with only single products before processing **/
+  for (const [title, group] of remainingGroups.entries()) {
+    if (group.length <= 1) {
+      remainingGroups.delete(title);
+    };
+  };
+
+  /** Create new combined products from remaining groups **/
+  const newCombinedProducts = Array.from(remainingGroups.entries())
+    .map(([cleanedTitle, groupedProducts]) => {
+      const firstProduct = groupedProducts[0];
+      
+      return {
+        productData: {
+          baseTitle: cleanedTitle,
+          title: firstProduct.title,
+          vendor: firstProduct.vendor,
+          createdAt: firstProduct.createdAt,
+          updatedAt: firstProduct.updatedAt,
+          publishedAt: firstProduct.publishedAt,
+          productType: firstProduct.productType,
+          status: firstProduct.status,
+          description: firstProduct.description,
+          tags: firstProduct.tags,
+          metafields: firstProduct.metafields,
+          seo: {
+            title: firstProduct.seo.title,
+            description: firstProduct.seo.description,
+          },
+          media: firstProduct.media,
+          variants: groupedProducts.map((product) => {
+            const productVariant = product.variants.edges[0].node;
+            const {size, color} = processTitle(product.title, productVariant?.sku);
+
+            return {
+              size,
+              color,
+              productTitle: cleanedTitle,
+              title: product?.title || '',
+              price: productVariant.price,
+              compareAtPrice: productVariant.compareAtPrice,
+              sku: productVariant.sku,
+              barcode: productVariant.barcode,
+              metafields: productVariant.metafields,
+              weight: productVariant.weight,
+              weightUnit: productVariant.weightUnit,
+              requiresShipping: productVariant.requiresShipping,
+              taxable: productVariant.taxable ?? true,
+              inventoryQuantity: productVariant.inventoryQuantity,
+            };
+          }),
+        }
+      };
+    });
+
+  /** Get final unmatched products - only those that weren't grouped **/
+  const finalUnmatched = remainingProducts.filter(product => {
+    const sku = product.variants.edges[0].node.sku;
+    const {cleanedTitle} = processTitle(product.title, sku);
+    const group = remainingGroups.get(cleanedTitle);
+    return !group || group.length <= 1;
+  });
+
+  console.log(`\nSuccessfully created ${newCombinedProducts.length} new groups`);
+  console.log(`${finalUnmatched.length} products remain unmatched:`);
+
+  return {
+    newCombinedProducts,
+    finalUnmatched
+  };
+};
+
 /** Combine similar products into product groups with variants **/
 const combineProducts = (products: ProductNode[]) => {
+  /** Keep track of remaining products to process **/
+  let remainingProducts = [...products];
+  
   /** Group products by their cleaned title **/
   const productsByTitle = new Map<string, ProductNode[]>();
 
-  /** Process each product and group by cleaned title **/
-  products.forEach(product => {
+  /** First round - group by cleaned title **/
+  remainingProducts.forEach(product => {
     const {cleanedTitle} = processTitle(
       product.title, 
       product?.variants?.edges?.[0]?.node?.sku
@@ -124,13 +264,54 @@ const combineProducts = (products: ProductNode[]) => {
     productsByTitle.get(cleanedTitle)?.push(product);
   });
 
-  /** Create combined products for groups with multiple variants **/
+  /** Create combined products and track linked products to add **/
   const combinedProducts = Array.from(productsByTitle.entries()).map(([cleanedTitle, groupedProducts]) => {
     if (groupedProducts.length <= 1) {
       return null;
-    };
+    }
 
     const firstProduct = groupedProducts[0];
+    const linkedProductIds = new Set<string>();
+
+    /** Get all linked product IDs **/
+    groupedProducts.forEach(product => {
+      const linkedProductsMetafield = product.metafields.find(meta => 
+        meta.key === "linked_products" && 
+        meta.type === "metaobject_reference"
+      );
+
+      if (linkedProductsMetafield?.reference) {
+        const linkedProductsField = linkedProductsMetafield.reference.fields.find(
+          field => field.key === "linked_product_group"
+        );
+
+        if (linkedProductsField?.value) {
+          try {
+            const ids = JSON.parse(linkedProductsField.value) as string[];
+            ids.forEach(id => linkedProductIds.add(id));
+          } catch (error) {
+            console.error(
+              `Error parsing linked products for ${cleanedTitle}:`,
+              error
+            );
+          }
+        }
+      }
+    });
+
+    /** Add any linked products that weren't in the original group **/
+    const linkedProducts = remainingProducts.filter(product => 
+      linkedProductIds.has(product.id) && 
+      !groupedProducts.some(p => p.id === product.id)
+    );
+
+    /** Remove found linked products from remaining products **/
+    remainingProducts = remainingProducts.filter(product => 
+      !linkedProductIds.has(product.id)
+    );
+
+    /** Combine original group with linked products **/
+    const allGroupProducts = [...groupedProducts, ...linkedProducts];
 
     return {
       productData: {
@@ -150,9 +331,8 @@ const combineProducts = (products: ProductNode[]) => {
           description: firstProduct.seo.description,
         },
         media: firstProduct.media,
-        variants: groupedProducts.map((product) => {
+        variants: allGroupProducts.map((product) => {
           const productVariant = product.variants.edges[0].node;
-
           const {size, color} = processTitle(product.title, productVariant?.sku);
 
           return {
@@ -178,25 +358,57 @@ const combineProducts = (products: ProductNode[]) => {
     group !== null && group.productData.variants.length > 1
   );
 
-  return combinedProducts;
+  return {
+    combinedProducts,
+    remainingProducts
+  };
 };
 
 async function getAllProducts() {
-  const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'products-cache.json');
+  try {
+    /** Check if cache file exists and is not expired **/
+    try {
+      const stats = await fs.stat(CACHE_FILE_PATH);
+      const cacheAge = Date.now() - stats.mtimeMs;
+      
+      if (cacheAge < CACHE_DURATION) {
+        console.log("Reading from cache...");
+        const fileContent = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
+        const cachedData = JSON.parse(fileContent);
+        const {combinedProducts, remainingProducts} = combineProducts(cachedData.data);
+        const {newCombinedProducts, finalUnmatched} = cleanupRemainingProducts(remainingProducts);
+        return {
+          originalProducts: cachedData.data,
+          combinedProducts: [...combinedProducts, ...newCombinedProducts],
+          unmatchedProducts: finalUnmatched
+        };
+      }
+    } catch (error) {
+      /** Cache file doesn't exist or other error, continue to fetch **/
+      console.log(`Cache not available, fetching from Shopify... ${error}`);
+    }
 
-  /** Read and parse the cached data **/
-  const fileContent = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
-  const cachedData = JSON.parse(fileContent);
-  const allProducts = cachedData.data;
+    /** Fetch fresh data from Shopify **/
+    const allProducts = await getAllShopifyProducts(GRAPHQL_ENDPOINT, ACCESS_TOKEN);
+    const {combinedProducts, remainingProducts} = combineProducts(allProducts);
+    const {newCombinedProducts, finalUnmatched} = cleanupRemainingProducts(remainingProducts);
 
-  const combinedProducts = combineProducts(allProducts);
-  
-  const result = {
-    originalProducts: allProducts,
-    combinedProducts: combinedProducts,
-  };
+    /** Save to cache **/
+    await fs.mkdir(path.dirname(CACHE_FILE_PATH), { recursive: true });
+    await fs.writeFile(
+      CACHE_FILE_PATH,
+      JSON.stringify({ data: allProducts, timestamp: Date.now() })
+    );
 
-  return result;
+    return {
+      originalProducts: allProducts,
+      combinedProducts: [...combinedProducts, ...newCombinedProducts],
+      unmatchedProducts: finalUnmatched
+    };
+  } catch (error) {
+    console.error("Error in getAllProducts:", error);
+    throw error;
+  }
 }
 
 export async function GET() {
