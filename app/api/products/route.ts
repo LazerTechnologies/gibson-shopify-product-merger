@@ -63,12 +63,12 @@ interface ShopifyProductInput {
 }
 
 function extractBaseTitle(title: string): string {
-  // Remove size patterns from title
+  /** Remove size patterns from title **/
   let baseTitle = title;
   Object.entries(SIZE_PATTERNS).forEach(([_, pattern]) => {
     baseTitle = baseTitle.replace(pattern, "");
   });
-  // Clean up any remaining artifacts
+  /** Clean up any remaining artifacts **/
   return baseTitle.replace(/[-_]/g, " ").replace(/\s+/g, " ").trim();
 }
 

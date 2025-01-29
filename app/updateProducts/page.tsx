@@ -27,7 +27,7 @@ export default function UpdateProducts() {
       const data = await res.json();
       console.log("Received data:", data);
       setProducts(data);
-      // Initialize all products as open
+      /** Initialize all products as open **/
       if (data?.combinedProducts) {
         const initialOpenStates = data.combinedProducts.reduce((
           acc: {[key: number]: boolean}, 
@@ -50,6 +50,10 @@ export default function UpdateProducts() {
     console.log("Updating products...");
     setIsLoading(true);
 
+    const combinedProducts = products?.combinedProducts;
+
+    const testUpdate = combinedProducts?.slice(0, 1);
+
     try {
       const response = await fetch("/api/products/merge", {
         method: "POST",
@@ -57,7 +61,7 @@ export default function UpdateProducts() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          products: products?.combinedProducts,
+          products: testUpdate,
         }),
       });
 

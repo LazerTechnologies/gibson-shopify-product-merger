@@ -31,6 +31,14 @@ export const getAllShopifyProducts = async (
               title
               description
             }
+            featuredMedia {
+              id
+              preview {
+                image {
+                  url
+                }
+              }
+            }
             media(first: 60) {
               edges {
                 node {

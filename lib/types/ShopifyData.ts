@@ -58,6 +58,14 @@ export interface ProductNode {
     title: string;
     description: string;
   };
+  featuredMedia: {
+    id: string;
+    preview: {
+      image: {
+        url: string;
+      };
+    };
+  };
   media: {
     edges: {
       node: MediaImage;
@@ -99,11 +107,12 @@ export interface CombinedProduct {
     };
     variants: {
       size: string;
-      color: string; // Added based on processTitle function
+      color: string;
       productTitle: string;
       title: string;
       price: string;
       compareAtPrice: string | null;
+      featuredImage: string;
       sku: string;
       barcode: string | null;
       metafields: Metafield[];

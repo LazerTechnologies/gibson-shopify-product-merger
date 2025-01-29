@@ -336,20 +336,21 @@ const combineProducts = (products: ProductNode[]) => {
           const {size, color} = processTitle(product.title, productVariant?.sku);
 
           return {
-            size,
-            color,
             productTitle: cleanedTitle,
             title: product?.title || '',
-            price: productVariant.price,
-            compareAtPrice: productVariant.compareAtPrice,
-            sku: productVariant.sku,
-            barcode: productVariant.barcode,
-            metafields: productVariant.metafields,
-            weight: productVariant.weight,
-            weightUnit: productVariant.weightUnit,
-            requiresShipping: productVariant.requiresShipping,
-            taxable: productVariant.taxable ?? true,
-            inventoryQuantity: productVariant.inventoryQuantity,
+            price: productVariant?.price,
+            size: size,
+            color: color,
+            compareAtPrice: productVariant?.compareAtPrice,
+            featuredImage: product?.featuredMedia?.id,
+            sku: productVariant?.sku,
+            barcode: productVariant?.barcode,
+            metafields: productVariant?.metafields,
+            weight: productVariant?.weight,
+            weightUnit: productVariant?.weightUnit,
+            requiresShipping: productVariant?.requiresShipping,
+            taxable: productVariant?.taxable ?? true,
+            inventoryQuantity: productVariant?.inventoryQuantity,
           };
         }),
       }
