@@ -8,7 +8,7 @@ export interface MediaImage {
     width: number;
     height: number;
   };
-}
+};
 
 export interface Metafield {
   namespace: string;
@@ -131,4 +131,13 @@ export interface CombinedProduct {
       inventoryQuantity: number;
     }[];
   };
-}
+};
+
+export interface ProductOption {
+  name: string;
+  values: string[];
+  id: string;
+  optionValues: Array<{
+    name: string;
+  }>;
+};

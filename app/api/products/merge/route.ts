@@ -4,6 +4,7 @@ import {NextResponse} from "next/server";
 import type {
   CombinedProduct,
   Metafield,
+  ProductOption,
 } from "@/lib/types/ShopifyData";
 
 /** Queries **/
@@ -33,14 +34,15 @@ export async function POST(request: Request) {
       const sizeOptions = [...new Set(product.productData.variants.map(v => v.size))].filter(Boolean);
       const colorOptions = [...new Set(product.productData.variants.map(v => v.color))].filter(Boolean);
 
-      /** Set default values for size and color options if they exist **/
       if (sizeOptions.length > 0) {
-        sizeOptions[0] = "Default";
-      }
-      
-      if (colorOptions.length > 0) {
-        colorOptions[0] = "Default";
-      }
+        sizeOptions.unshift("Default Title");
+      } else if (colorOptions.length > 0) {
+        colorOptions.unshift("Default Title");
+      };
+
+      const productVariantsToUpdate = product?.productData?.variants?.filter((variant) =>
+        variant?.size || variant?.color !== ''
+      );
 
       /** Create The Product Input For The Product Create Mutation **/
       const productCreateInput = {
@@ -108,28 +110,35 @@ export async function POST(request: Request) {
         console.error("Product Creation Errors:", productCreateData.data.productCreate.userErrors);
         throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.data.productCreate.userErrors));
       };
-
+      
       const productId = productCreateData?.data?.productCreate?.product?.id;
 
       /** Get the option IDs for Size and Color **/
-      const sizeOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: any) => 
+      const sizeOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: ProductOption) => 
         option.name === "Size"
       )?.id;
-      
-      const colorOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: any) => 
+
+      const colorOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: ProductOption) => 
         option.name === "Color"
       )?.id;
 
       /** Create The Structure For The Bulk Variant Input **/
-      const productVariantData = product?.productData?.variants?.length > 0 ? 
-        product?.productData?.variants?.map(variant => ({
-          barcode: variant?.barcode ?? "",
-          compareAtPrice: variant?.compareAtPrice ?? "",
-          price: variant?.price ?? "",
+      const productVariantData = productVariantsToUpdate?.length > 0 ? 
+        productVariantsToUpdate?.map(variant => ({
+          barcode: variant?.barcode ?? null,
+          compareAtPrice: variant?.compareAtPrice ?? null,
+          price: variant?.price ?? null,
           taxable: variant?.taxable ?? true,
           inventoryItem: {
             sku: variant?.sku,
             requiresShipping: variant?.requiresShipping ?? false,
+            countryCodeOfOrigin: variant?.countryOfOrigin ?? null,
+            measurement: {
+              weight: {
+                unit: variant.weightUnit || "POUNDS",
+                value: variant.weight || 0,
+              }
+            },
           },
           mediaId: variant?.featuredImage ? variant?.featuredImage : null,
           metafields: variant?.metafields?.length > 0 ? 
@@ -186,12 +195,14 @@ export async function POST(request: Request) {
           product: productCreateData?.data?.productCreate?.product,
           variants: variantCreateData?.data?.productVariantsBulkCreate?.productVariants,
           error: variantCreateData.data.productVariantsBulkCreate.userErrors,
+          productVariantData: productVariantData,
         }
       }
 
       return {
         product: productCreateData?.data?.productCreate?.product,
         variants: variantCreateData?.data?.productVariantsBulkCreate?.productVariants,
+        productVariantData,
       };
     }));
 
