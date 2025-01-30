@@ -85,6 +85,14 @@ export const getAllShopifyProducts = async (
                   inventoryQuantity
                   barcode
                   taxable
+                  inventoryItem {
+                    countryCodeOfOrigin
+                    measurement {
+                      weight {
+                        value
+                      }
+                    }
+                  }
                   metafields(first: 28) {
                     nodes {
                       namespace

@@ -33,9 +33,16 @@ export interface ProductVariant {
   compareAtPrice: string | null;
   inventoryQuantity: number;
   barcode: string | null;
-  weight: number;
-  weightUnit: string;
   requiresShipping: boolean;
+  inventoryItem: {
+    countryCodeOfOrigin: string | null;
+  } | null;
+  measurement: {
+    weight: {
+      value: number;
+      unit: string;
+    }
+  } | null;
   taxable: boolean;
   metafields: Metafield[];
 };
@@ -116,8 +123,9 @@ export interface CombinedProduct {
       sku: string;
       barcode: string | null;
       metafields: Metafield[];
-      weight: number;
-      weightUnit: string;
+      weight: number | null;
+      weightUnit: string | null;
+      countryOfOrigin: string | null;
       requiresShipping: boolean;
       taxable: boolean;
       inventoryQuantity: number;

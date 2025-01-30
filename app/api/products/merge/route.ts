@@ -37,17 +37,13 @@ export async function POST(request: Request) {
       if (sizeOptions.length > 0) {
         sizeOptions[0] = "Default";
       }
+      
       if (colorOptions.length > 0) {
         colorOptions[0] = "Default";
       }
 
       /** Create The Product Input For The Product Create Mutation **/
       const productCreateInput = {
-        // media: product?.productData?.media?.edges?.length > 0 ? product?.productData?.media?.edges?.map(media => ({
-        //   alt: media?.node?.alt,
-        //   mediaContentType: media?.node?.mediaContentType,
-        //   originalSource: media?.node?.image?.url,
-        // })) : null,
         input: {
           title: product?.productData?.baseTitle,
           descriptionHtml: product?.productData?.description,
@@ -116,8 +112,13 @@ export async function POST(request: Request) {
       const productId = productCreateData?.data?.productCreate?.product?.id;
 
       /** Get the option IDs for Size and Color **/
-      const sizeOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: any) => option.name === "Size")?.id;
-      const colorOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: any) => option.name === "Color")?.id;
+      const sizeOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: any) => 
+        option.name === "Size"
+      )?.id;
+      
+      const colorOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: any) => 
+        option.name === "Color"
+      )?.id;
 
       /** Create The Structure For The Bulk Variant Input **/
       const productVariantData = product?.productData?.variants?.length > 0 ? 
@@ -130,7 +131,6 @@ export async function POST(request: Request) {
             sku: variant?.sku,
             requiresShipping: variant?.requiresShipping ?? false,
           },
-          // mediaSrc: variant?.featuredImage ? JSON.stringify([variant?.featuredImage]) : null,
           mediaId: variant?.featuredImage ? variant?.featuredImage : null,
           metafields: variant?.metafields?.length > 0 ? 
             variant?.metafields?.filter((metafield: Metafield) => 

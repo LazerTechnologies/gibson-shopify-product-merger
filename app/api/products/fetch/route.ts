@@ -10,7 +10,7 @@ import {getAllShopifyProducts} from "@/lib/utils";
 
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
-const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2024-10/graphql.json`;
+const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2025-01/graphql.json`;
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'products-cache.json');
 const CACHE_DURATION = 1000 * 60 * 60; /** 1 hour in milliseconds **/
 
@@ -215,11 +215,12 @@ const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
               sku: productVariant.sku,
               barcode: productVariant.barcode,
               metafields: productVariant.metafields,
-              weight: productVariant.weight,
-              weightUnit: productVariant.weightUnit,
               requiresShipping: productVariant.requiresShipping,
               taxable: productVariant.taxable ?? true,
               inventoryQuantity: productVariant.inventoryQuantity,
+              weight: productVariant.measurement?.weight?.value,
+              weightUnit: productVariant.measurement?.weight?.unit,
+              countryOfOrigin: productVariant.inventoryItem?.countryCodeOfOrigin,
             };
           }),
         }
@@ -346,11 +347,12 @@ const combineProducts = (products: ProductNode[]) => {
             sku: productVariant?.sku,
             barcode: productVariant?.barcode,
             metafields: productVariant?.metafields,
-            weight: productVariant?.weight,
-            weightUnit: productVariant?.weightUnit,
             requiresShipping: productVariant?.requiresShipping,
             taxable: productVariant?.taxable ?? true,
             inventoryQuantity: productVariant?.inventoryQuantity,
+            weight: productVariant.measurement?.weight?.value,
+            weightUnit: productVariant.measurement?.weight?.unit,
+            countryOfOrigin: productVariant.inventoryItem?.countryCodeOfOrigin,
           };
         }),
       }
