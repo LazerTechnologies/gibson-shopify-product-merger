@@ -14,6 +14,7 @@ import {
   mutationProductCreate,
   mutationProductVariantsBulkCreate,
   mutationProductVariantsBulkDelete,
+  mutationFileUpdate,
 } from "@/queries";
 
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
@@ -28,14 +29,20 @@ const createShopifyProduct = async (product: CombinedProduct) => {
   const sizeOptions = [...new Set(product.productData.variants.map(v => v.size))].filter(Boolean);
   const colorOptions = [...new Set(product.productData.variants.map(v => v.color))].filter(Boolean);
 
-  if (sizeOptions.length > 0) {
+  // Only add Default Title if we have options
+  if (sizeOptions.length > 0 || colorOptions.length > 0) {
     sizeOptions.unshift("Default Title");
-  } else if (colorOptions.length > 0) {
-    colorOptions.unshift("Default Title");
-  };
+  }
 
   /** Create The Product Input For The Product Create Mutation **/
   const productCreateInput = {
+    media: product?.productData?.media?.edges?.length > 0 ? product?.productData?.media?.edges?.map((media) => {
+      return {
+        alt: media?.node?.alt,
+        mediaContentType: "IMAGE",
+        originalSource: media?.node?.image?.url,
+      };
+    }) : null,
     input: {
       title: product?.productData?.baseTitle,
       descriptionHtml: product?.productData?.description,
@@ -44,18 +51,18 @@ const createShopifyProduct = async (product: CombinedProduct) => {
       status: "DRAFT",
       vendor: product?.productData?.vendor,
       productOptions: [
-        {
+        ...(sizeOptions.length > 0 ? [{
           name: "Size",
           values: sizeOptions?.map((size) => ({
             name: size,
           })),
-        },
-        {
+        }] : []),
+        ...(colorOptions.length > 0 ? [{
           name: "Color", 
           values: colorOptions?.map((color) => ({
             name: color,
           })),
-        }
+        }] : [])
       ],
       tags: product?.productData?.tags?.length > 0 ? product?.productData?.tags : null,
       metafields: product?.productData?.metafields?.length > 0 ? 
@@ -100,8 +107,8 @@ const createShopifyProduct = async (product: CombinedProduct) => {
     throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.data.productCreate.userErrors));
   };
 
-  return productCreateData;
-}
+  return {productCreateData, productCreateInput};
+};
 
 const createProductVariants = async (product: CombinedProduct, productCreateData: ProductCreateResponse) => {
   const productId = productCreateData?.data?.productCreate?.product?.id;
@@ -115,58 +122,76 @@ const createProductVariants = async (product: CombinedProduct, productCreateData
     option.name === "Color"
   )?.id;
 
-  const productVariantsToUpdate = product?.productData?.variants?.filter((variant) =>
-    variant?.size || variant?.color !== ''
-  );
+  const productVariantsToUpdate = product?.productData?.variants?.filter((variant) => {
+    if (sizeOptionId && colorOptionId) {
+      /** If both size and color options exist, require both **/
+      return variant?.size && variant?.color;
+    } else if (sizeOptionId) {
+      /** If only size option exists, only filter by size **/
+      return variant?.size;
+    } else if (colorOptionId) {
+      /** If only color option exists, only filter by color  **/ 
+      return variant?.color;
+    }
+    return false; /** No valid options found **/
+  });
 
   /** Create The Structure For The Bulk Variant Input **/
   const productVariantData = productVariantsToUpdate?.length > 0 ? 
-    productVariantsToUpdate?.map(variant => ({
-      barcode: variant?.barcode ?? null,
-      compareAtPrice: variant?.compareAtPrice ?? null,
-      price: variant?.price ?? null,
-      taxable: variant?.taxable ?? true,
-      inventoryItem: {
-        sku: variant?.sku,
-        requiresShipping: variant?.requiresShipping ?? false,
-        countryCodeOfOrigin: variant?.countryOfOrigin ?? null,
-        harmonizedSystemCode: variant?.harmonizedSystemCode ?? null,
-        measurement: {
-          weight: {
-            unit: variant.weightUnit || "POUNDS",
-            value: variant.weight || 0,
-          }
-        },
-      },
-      mediaId: variant?.featuredImage ? variant?.featuredImage : null,
-      metafields: variant?.metafields?.length > 0 ? 
-        variant?.metafields?.filter((metafield: Metafield) => 
-          metafield.key !== "harmonized_system_code"
-        ).map((metafield: Metafield) => ({
-          namespace: metafield?.namespace,
-          key: metafield?.key,
-          value: metafield?.value,
-          type: metafield?.type,
-        }))
-      : null,
-      optionValues: [
-        ...(variant?.size ? [{
-          name: variant?.size,
+    productVariantsToUpdate?.map(variant => {
+      /** Ensure we have either size or color values **/
+      const optionValues = [];
+      if (sizeOptionId && variant.size) {
+        optionValues.push({
+          name: variant.size,
           optionId: sizeOptionId
-        }]: []),
-        ...(variant?.color ? [{
-          name: variant?.color,
+        });
+      }
+      if (colorOptionId && variant.color) {
+        optionValues.push({
+          name: variant.color,
           optionId: colorOptionId
-        }]: []),
-      ],
-    }))
+        });
+      }
+
+      return {
+        barcode: variant?.barcode ?? null,
+        compareAtPrice: variant?.compareAtPrice ?? null,
+        price: variant?.price ?? null,
+        taxable: variant?.taxable ?? true,
+        inventoryItem: {
+          sku: variant?.sku,
+          requiresShipping: variant?.requiresShipping ?? false,
+          countryCodeOfOrigin: variant?.countryOfOrigin ?? null,
+          harmonizedSystemCode: variant?.harmonizedSystemCode ?? null,
+          measurement: {
+            weight: {
+              unit: variant.weightUnit || "POUNDS",
+              value: variant.weight || 0,
+            }
+          },
+        },
+        mediaId: variant?.featuredImage?.id ? variant?.featuredImage?.id : null,
+        metafields: variant?.metafields?.length > 0 ? 
+          variant?.metafields?.filter((metafield: Metafield) => 
+            metafield.key !== "harmonized_system_code"
+          ).map((metafield: Metafield) => ({
+            namespace: metafield?.namespace,
+            key: metafield?.key,
+            value: metafield?.value,
+            type: metafield?.type,
+          }))
+        : null,
+        optionValues
+      };
+    })
   : null;
 
   const productVariantInput = {
     productId: productId,
     variants: productVariantData,
   };
-
+  
   console.log("Creating Product Variants");
   const productVariantCreateResponse = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
@@ -197,7 +222,7 @@ const deleteDefaultTitleVariant = async (
   }
 ) => {
   console.log("Deleting Default Title Variant");
-  
+
   /** Look for variants with "Default Title" in any part of the title **/
   const defaultTitleVariants = variants?.nodes?.filter(variant => 
     variant.title.includes("Default Title")
@@ -241,7 +266,8 @@ export async function POST(request: Request) {
     const {products} = await request.json();
 
     const mergedProductsResponse = await Promise.all(products.map(async (product: CombinedProduct) => {
-      const productCreateData = await createShopifyProduct(product);
+      const {productCreateData, productCreateInput} = await createShopifyProduct(product);
+
       const {variantCreateData, productVariantData} = await createProductVariants(product, productCreateData);
       
       /** Check for user errors in variant creation **/
@@ -252,6 +278,7 @@ export async function POST(request: Request) {
           variants: variantCreateData?.data?.productVariantsBulkCreate?.productVariants,
           error: variantCreateData.data.productVariantsBulkCreate.userErrors,
           productVariantData: productVariantData,
+          productCreateInput: productCreateInput,
         };
       };
 
@@ -266,7 +293,8 @@ export async function POST(request: Request) {
         variants: variantCreateData?.data?.productVariantsBulkCreate?.productVariants,
         productCreateData: productCreateData,
         productVariantData: productVariantData,
-        defaultTitleDeletion: deleteResult
+        defaultTitleDeletion: deleteResult,
+        productCreateInput: productCreateInput,
       };
     }));
 

@@ -194,25 +194,14 @@ const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
       groupedProducts.forEach(product => {
         if (product.featuredMedia?.preview?.image?.url) {
           const imageUrl = product.featuredMedia.preview.image.url;
-          const urlParts = imageUrl.split('/');
-          const filename = urlParts[urlParts.length - 1].split('?v')[0];
           const alt = product.featuredMedia?.preview?.image?.altText;
-          
-          /** Store by filename **/
-          if (!uniqueImages.has(filename)) {
-            uniqueImages.set(filename, {
-              id: product.featuredMedia.id,
-              url: imageUrl,
-              alt
-            });
-          }
 
           /** Also store by alt text if it exists **/
           if (alt && !uniqueImages.has(alt)) {
             uniqueImages.set(alt, {
               id: product.featuredMedia.id,
               url: imageUrl,
-              alt
+              alt: alt,
             });
           }
         }
@@ -242,20 +231,20 @@ const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
             const {size, color} = processTitle(product.title, productVariant?.sku);
 
             /** Try to find matching featured image for this variant **/
-            let variantImage = product.featuredMedia?.id;
+            let variantImage = {
+              id: product.featuredMedia?.id,
+              altText: product.featuredMedia?.preview?.image?.altText
+            };
+
             if (product.featuredMedia?.preview?.image?.url) {
-              /** First try matching by filename **/
-              const urlParts = product.featuredMedia.preview.image.url.split('/');
-              const filename = urlParts[urlParts.length - 1].split('?v')[0];
-              let existingImage = uniqueImages.get(filename);
-
               /** If no match by filename, try matching by alt text **/
-              if (!existingImage && product?.featuredMedia?.preview?.image?.altText) {
-                existingImage = uniqueImages.get(product?.featuredMedia?.preview?.image?.altText);
-              };
-
+              const existingImage = uniqueImages.get(product?.featuredMedia?.preview?.image?.altText);
+              
               if (existingImage) {
-                variantImage = existingImage.id;
+                variantImage = {
+                  id: existingImage.id,
+                  altText: existingImage.alt
+                };
               };
             };
 
@@ -381,25 +370,14 @@ const combineProducts = (products: ProductNode[]) => {
     allGroupProducts.forEach(product => {
       if (product.featuredMedia?.preview?.image?.url) {
         const imageUrl = product.featuredMedia.preview.image.url;
-        const urlParts = imageUrl.split('/');
-        const filename = urlParts[urlParts.length - 1].split('?v')[0];
         const alt = product.featuredMedia?.preview?.image?.altText;
-        
-        /** Store by filename **/
-        if (!uniqueImages.has(filename)) {
-          uniqueImages.set(filename, {
-            id: product.featuredMedia.id,
-            url: imageUrl,
-            alt
-          });
-        }
 
         /** Also store by alt text if it exists **/
         if (alt && !uniqueImages.has(alt)) {
           uniqueImages.set(alt, {
             id: product.featuredMedia.id,
             url: imageUrl,
-            alt
+            alt: alt,
           });
         }
       }
@@ -429,20 +407,20 @@ const combineProducts = (products: ProductNode[]) => {
           const {size, color} = processTitle(product.title, productVariant?.sku);
 
           /** Try to find matching featured image for this variant **/
-          let variantImage = product.featuredMedia?.id;
+          let variantImage = {
+            id: product.featuredMedia?.id,
+            altText: product.featuredMedia?.preview?.image?.altText
+          };
+
           if (product.featuredMedia?.preview?.image?.url) {
             /** First try matching by filename **/
-            const urlParts = product.featuredMedia.preview.image.url.split('/');
-            const filename = urlParts[urlParts.length - 1].split('?v')[0];
-            let existingImage = uniqueImages.get(filename);
-
-            /** If no match by filename, try matching by alt text **/
-            if (!existingImage && product?.featuredMedia?.preview?.image?.altText) {
-              existingImage = uniqueImages.get(product?.featuredMedia?.preview?.image?.altText);
-            }
+            const existingImage = uniqueImages.get(product?.featuredMedia?.preview?.image?.altText);
 
             if (existingImage) {
-              variantImage = existingImage.id;
+              variantImage = {
+                id: existingImage.id,
+                altText: existingImage.alt
+              };
             };
           };
 
@@ -508,10 +486,10 @@ async function getAllProducts() {
     const {newCombinedProducts, finalUnmatched} = cleanupRemainingProducts(remainingProducts);
 
     /** Save to cache **/
-    await fs.mkdir(path.dirname(CACHE_FILE_PATH), { recursive: true });
+    await fs.mkdir(path.dirname(CACHE_FILE_PATH), {recursive: true});
     await fs.writeFile(
       CACHE_FILE_PATH,
-      JSON.stringify({ data: allProducts, timestamp: Date.now() })
+      JSON.stringify({data: allProducts, timestamp: Date.now()})
     );
 
     return {
@@ -534,8 +512,8 @@ export async function GET() {
   } catch (error) {
     console.error("Error in GET handler:", error);
     return NextResponse.json(
-      { error: "Failed to fetch products" },
-      { status: 500 }
+      {error: "Failed to fetch products"},
+      {status: 500}
     );
   }
 }

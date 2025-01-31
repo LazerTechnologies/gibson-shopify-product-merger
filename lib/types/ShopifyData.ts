@@ -130,7 +130,10 @@ export interface CombinedProduct {
       title: string;
       price: string;
       compareAtPrice: string | null;
-      featuredImage: string | null;
+      featuredImage: {
+        id: string | null;
+        altText: string | null;
+      };
       sku: string;
       barcode: string | null;
       metafields: Metafield[];
