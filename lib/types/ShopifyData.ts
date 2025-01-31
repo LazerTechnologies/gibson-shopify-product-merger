@@ -36,6 +36,7 @@ export interface ProductVariant {
   requiresShipping: boolean;
   inventoryItem: {
     countryCodeOfOrigin: string | null;
+    harmonizedSystemCode: string | null;
   } | null;
   measurement: {
     weight: {
@@ -70,6 +71,7 @@ export interface ProductNode {
     preview: {
       image: {
         url: string;
+        altText: string;
       };
     };
   };
@@ -112,6 +114,15 @@ export interface CombinedProduct {
         node: MediaImage;
       }[];
     };
+    featuredMedia?: {
+      id: string;
+      preview: {
+        image: {
+          url: string;
+          altText: string;
+        };
+      };
+    };
     variants: {
       size: string;
       color: string;
@@ -119,13 +130,14 @@ export interface CombinedProduct {
       title: string;
       price: string;
       compareAtPrice: string | null;
-      featuredImage: string;
+      featuredImage: string | null;
       sku: string;
       barcode: string | null;
       metafields: Metafield[];
       weight: number | null;
       weightUnit: string | null;
       countryOfOrigin: string | null;
+      harmonizedSystemCode: string | null;
       requiresShipping: boolean;
       taxable: boolean;
       inventoryQuantity: number;

@@ -183,6 +183,41 @@ const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
     .map(([cleanedTitle, groupedProducts]) => {
       const firstProduct = groupedProducts[0];
       
+      /** Track unique featured images by their base filename and alt text **/
+      const uniqueImages = new Map<string, {
+        id: string,
+        url: string,
+        alt?: string
+      }>();
+
+      /** Process featured images to build unique image map **/
+      groupedProducts.forEach(product => {
+        if (product.featuredMedia?.preview?.image?.url) {
+          const imageUrl = product.featuredMedia.preview.image.url;
+          const urlParts = imageUrl.split('/');
+          const filename = urlParts[urlParts.length - 1].split('?v')[0];
+          const alt = product.featuredMedia?.preview?.image?.altText;
+          
+          /** Store by filename **/
+          if (!uniqueImages.has(filename)) {
+            uniqueImages.set(filename, {
+              id: product.featuredMedia.id,
+              url: imageUrl,
+              alt
+            });
+          }
+
+          /** Also store by alt text if it exists **/
+          if (alt && !uniqueImages.has(alt)) {
+            uniqueImages.set(alt, {
+              id: product.featuredMedia.id,
+              url: imageUrl,
+              alt
+            });
+          }
+        }
+      });
+
       return {
         productData: {
           baseTitle: cleanedTitle,
@@ -201,9 +236,28 @@ const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
             description: firstProduct.seo.description,
           },
           media: firstProduct.media,
+          featuredMedia: firstProduct.featuredMedia,
           variants: groupedProducts.map((product) => {
             const productVariant = product.variants.edges[0].node;
             const {size, color} = processTitle(product.title, productVariant?.sku);
+
+            /** Try to find matching featured image for this variant **/
+            let variantImage = product.featuredMedia?.id;
+            if (product.featuredMedia?.preview?.image?.url) {
+              /** First try matching by filename **/
+              const urlParts = product.featuredMedia.preview.image.url.split('/');
+              const filename = urlParts[urlParts.length - 1].split('?v')[0];
+              let existingImage = uniqueImages.get(filename);
+
+              /** If no match by filename, try matching by alt text **/
+              if (!existingImage && product?.featuredMedia?.preview?.image?.altText) {
+                existingImage = uniqueImages.get(product?.featuredMedia?.preview?.image?.altText);
+              };
+
+              if (existingImage) {
+                variantImage = existingImage.id;
+              };
+            };
 
             return {
               size,
@@ -221,6 +275,8 @@ const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
               weight: productVariant.measurement?.weight?.value,
               weightUnit: productVariant.measurement?.weight?.unit,
               countryOfOrigin: productVariant.inventoryItem?.countryCodeOfOrigin,
+              harmonizedSystemCode: productVariant.inventoryItem?.harmonizedSystemCode,
+              featuredImage: variantImage
             };
           }),
         }
@@ -314,6 +370,41 @@ const combineProducts = (products: ProductNode[]) => {
     /** Combine original group with linked products **/
     const allGroupProducts = [...groupedProducts, ...linkedProducts];
 
+    /** Track unique featured images by their base filename and alt text **/
+    const uniqueImages = new Map<string, {
+      id: string,
+      url: string,
+      alt?: string
+    }>();
+
+    /** Process featured images to build unique image map **/
+    allGroupProducts.forEach(product => {
+      if (product.featuredMedia?.preview?.image?.url) {
+        const imageUrl = product.featuredMedia.preview.image.url;
+        const urlParts = imageUrl.split('/');
+        const filename = urlParts[urlParts.length - 1].split('?v')[0];
+        const alt = product.featuredMedia?.preview?.image?.altText;
+        
+        /** Store by filename **/
+        if (!uniqueImages.has(filename)) {
+          uniqueImages.set(filename, {
+            id: product.featuredMedia.id,
+            url: imageUrl,
+            alt
+          });
+        }
+
+        /** Also store by alt text if it exists **/
+        if (alt && !uniqueImages.has(alt)) {
+          uniqueImages.set(alt, {
+            id: product.featuredMedia.id,
+            url: imageUrl,
+            alt
+          });
+        }
+      }
+    });
+
     return {
       productData: {
         baseTitle: cleanedTitle,
@@ -332,9 +423,28 @@ const combineProducts = (products: ProductNode[]) => {
           description: firstProduct.seo.description,
         },
         media: firstProduct.media,
+        featuredMedia: firstProduct.featuredMedia,
         variants: allGroupProducts.map((product) => {
           const productVariant = product.variants.edges[0].node;
           const {size, color} = processTitle(product.title, productVariant?.sku);
+
+          /** Try to find matching featured image for this variant **/
+          let variantImage = product.featuredMedia?.id;
+          if (product.featuredMedia?.preview?.image?.url) {
+            /** First try matching by filename **/
+            const urlParts = product.featuredMedia.preview.image.url.split('/');
+            const filename = urlParts[urlParts.length - 1].split('?v')[0];
+            let existingImage = uniqueImages.get(filename);
+
+            /** If no match by filename, try matching by alt text **/
+            if (!existingImage && product?.featuredMedia?.preview?.image?.altText) {
+              existingImage = uniqueImages.get(product?.featuredMedia?.preview?.image?.altText);
+            }
+
+            if (existingImage) {
+              variantImage = existingImage.id;
+            };
+          };
 
           return {
             productTitle: cleanedTitle,
@@ -343,7 +453,7 @@ const combineProducts = (products: ProductNode[]) => {
             size: size,
             color: color,
             compareAtPrice: productVariant?.compareAtPrice,
-            featuredImage: product?.featuredMedia?.id,
+            featuredImage: variantImage,
             sku: productVariant?.sku,
             barcode: productVariant?.barcode,
             metafields: productVariant?.metafields,
@@ -353,6 +463,7 @@ const combineProducts = (products: ProductNode[]) => {
             weight: productVariant.measurement?.weight?.value,
             weightUnit: productVariant.measurement?.weight?.unit,
             countryOfOrigin: productVariant.inventoryItem?.countryCodeOfOrigin,
+            harmonizedSystemCode: productVariant.inventoryItem?.harmonizedSystemCode,
           };
         }),
       }

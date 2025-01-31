@@ -130,6 +130,7 @@ const createProductVariants = async (product: CombinedProduct, productCreateData
         sku: variant?.sku,
         requiresShipping: variant?.requiresShipping ?? false,
         countryCodeOfOrigin: variant?.countryOfOrigin ?? null,
+        harmonizedSystemCode: variant?.harmonizedSystemCode ?? null,
         measurement: {
           weight: {
             unit: variant.weightUnit || "POUNDS",

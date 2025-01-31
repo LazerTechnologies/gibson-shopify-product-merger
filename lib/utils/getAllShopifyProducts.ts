@@ -33,9 +33,11 @@ export const getAllShopifyProducts = async (
             }
             featuredMedia {
               id
+              alt
               preview {
                 image {
                   url
+                  altText
                 }
               }
             }
@@ -87,6 +89,7 @@ export const getAllShopifyProducts = async (
                   taxable
                   inventoryItem {
                     countryCodeOfOrigin
+                    harmonizedSystemCode
                     measurement {
                       weight {
                         value
