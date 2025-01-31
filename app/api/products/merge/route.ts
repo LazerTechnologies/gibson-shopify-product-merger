@@ -187,11 +187,26 @@ const createProductVariants = async (product: CombinedProduct, productCreateData
   return {variantCreateData, productVariantData};
 };
 
-const deleteDefaultTitleVariant = async (productId: string, variants: { id: string; title: string }[]) => {
-  const defaultTitleVariant = variants.find(variant => variant.title.includes("Default Title"));
+const deleteDefaultTitleVariant = async (
+  productId: string, 
+  variants: {
+    nodes: Array<{
+      id: string; 
+      title: string;
+    }>;
+  }
+) => {
+  console.log("Deleting Default Title Variant");
   
-  if (defaultTitleVariant) {
-    console.log("Deleting Default Title Variant");
+  /** Look for variants with "Default Title" in any part of the title **/
+  const defaultTitleVariants = variants?.nodes?.filter(variant => 
+    variant.title.includes("Default Title")
+  );
+  
+  if (defaultTitleVariants.length > 0) {
+    console.log("Found Default Title Variants:", defaultTitleVariants);
+    console.log("Deleting Default Title Variants");
+    
     const deleteResponse = await fetch(GRAPHQL_ENDPOINT, {
       method: "POST",
       headers: {
@@ -202,15 +217,17 @@ const deleteDefaultTitleVariant = async (productId: string, variants: { id: stri
         query: mutationProductVariantsBulkDelete(),
         variables: {
           productId: productId,
-          variantsIds: [defaultTitleVariant.id]
+          variantsIds: defaultTitleVariants.map(variant => variant.id)
         },
       })
     });
     
     const deleteData = await deleteResponse.json();
-    console.log("Default Title Variant Deleted:", deleteData);
+    console.log("Default Title Variants Deleted:", deleteData);
     return deleteData;
   };
+  
+  console.log("No Default Title variants found to delete");
   return null;
 };
 
@@ -241,7 +258,7 @@ export async function POST(request: Request) {
       /** Delete the Default Title variant after successful variant creation **/
       const deleteResult = await deleteDefaultTitleVariant(
         productCreateData.data.productCreate.product.id,
-        variantCreateData.data.productVariantsBulkCreate.productVariants
+        productCreateData.data.productCreate?.product?.variants
       );
 
       return {

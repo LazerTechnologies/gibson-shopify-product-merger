@@ -500,7 +500,7 @@ async function getAllProducts() {
     } catch (error) {
       /** Cache file doesn't exist or other error, continue to fetch **/
       console.log(`Cache not available, fetching from Shopify... ${error}`);
-    }
+    };
 
     /** Fetch fresh data from Shopify **/
     const allProducts = await getAllShopifyProducts(GRAPHQL_ENDPOINT, ACCESS_TOKEN);

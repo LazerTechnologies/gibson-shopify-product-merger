@@ -54,12 +54,6 @@ export default function UpdateProducts() {
 
     const testUpdate = combinedProducts?.slice(0, 1);
 
-    setIsLoading(false);
-
-    console.log("testUpdate: ", testUpdate);
-
-    return testUpdate;
-
     console.log("testUpdate: ", testUpdate);
 
     try {
