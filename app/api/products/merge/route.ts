@@ -21,6 +21,30 @@ const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2025-01/graphql.json`;
 
+const updateImageAltText = async (mediaId: string, color: string, currentAltText: string) => {
+  const newAltText = `${color} | ${currentAltText}`;
+  
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "X-Shopify-Access-Token": ACCESS_TOKEN!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: mutationFileUpdate(),
+      variables: {
+        input: {
+          id: mediaId,
+          alt: newAltText
+        }
+      }
+    })
+  });
+
+  const data = await response.json();
+  return data;
+};
+
 const createShopifyProduct = async (product: CombinedProduct) => {
   /** Create The Product Handle - Remove White Space And Replace With A Dash **/
   const productHandle = product?.productData?.baseTitle?.replace(/\s+/g, '-');
@@ -29,10 +53,10 @@ const createShopifyProduct = async (product: CombinedProduct) => {
   const sizeOptions = [...new Set(product.productData.variants.map(v => v.size))].filter(Boolean);
   const colorOptions = [...new Set(product.productData.variants.map(v => v.color))].filter(Boolean);
 
-  // Only add Default Title if we have options
+  /** Only add Default Title if we have options **/
   if (sizeOptions.length > 0 || colorOptions.length > 0) {
     sizeOptions.unshift("Default Title");
-  }
+  };
 
   /** Create The Product Input For The Product Create Mutation **/
   const productCreateInput = {
@@ -208,6 +232,25 @@ const createProductVariants = async (product: CombinedProduct, productCreateData
 
   const variantCreateData = await productVariantCreateResponse.json() as VariantCreateResponse;
   console.log("Variant Create Response:", variantCreateData);
+
+  /** Update alt text for unique images only */
+  if (productVariantsToUpdate) {
+    const processedImageIds = new Set();
+    
+    for (const variant of productVariantsToUpdate) {
+      if (variant.featuredImage?.id && variant.color && variant.featuredImage?.altText) {
+        /** Only process each unique image once **/
+        if (!processedImageIds.has(variant.featuredImage.id)) {
+          await updateImageAltText(
+            variant.featuredImage.id,
+            variant.color,
+            variant.featuredImage.altText
+          );
+          processedImageIds.add(variant.featuredImage.id);
+        }
+      }
+    }
+  }
 
   return {variantCreateData, productVariantData};
 };
