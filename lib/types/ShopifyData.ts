@@ -141,3 +141,62 @@ export interface ProductOption {
     name: string;
   }>;
 };
+
+export interface ProductCreateResponse {
+  data: {
+    productCreate: {
+      product: {
+        id: string;
+        options: ProductOption[];
+        media: {
+          edges: {
+            node: {
+              id: string;
+              preview: {
+                image: {
+                  url: string;
+                }
+              }
+            }
+          }[]
+        };
+        metafields: {
+          edges: {
+            node: {
+              id: string;
+              namespace: string;
+              key: string;
+              value: string;
+            }
+          }[]
+        };
+        variants: {
+          nodes: {
+            id: string;
+            position: number;
+            title: string;
+          }[]
+        };
+      };
+      userErrors: {
+        message: string;
+        field: string[];
+      }[];
+    };
+  };
+};
+
+export interface VariantCreateResponse {
+  data: {
+    productVariantsBulkCreate: {
+      productVariants: {
+        id: string;
+        title: string;
+      }[];
+      userErrors: {
+        message: string;
+        field: string[];
+      }[];
+    };
+  };
+};

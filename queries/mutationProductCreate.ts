@@ -33,6 +33,13 @@ export const mutationProductCreate = () => {
             }
           }
         }
+        variants(first: 99) {
+          nodes {
+            id
+            position
+            title
+          }
+        }
       }
       userErrors {
         message
