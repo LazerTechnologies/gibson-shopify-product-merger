@@ -51,8 +51,6 @@ export default function UpdateProducts() {
     setIsLoading(true);
 
     const combinedProducts = products?.combinedProducts;
-
-    const testUpdate = combinedProducts?.slice(8, 9);
     
     try {
       const response = await fetch("/api/products/merge", {
@@ -61,7 +59,7 @@ export default function UpdateProducts() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          products: testUpdate,
+          products: combinedProducts,
         }),
       });
 
