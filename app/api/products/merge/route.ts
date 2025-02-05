@@ -25,7 +25,7 @@ const createProductSet = async (product: CombinedProduct) => {
 
   /** Analyze variant distribution by color and find variant with least occurrences **/
   let variantCountByColor: Record<string, number> = {};
-  let variantWithLeastOccurrences: any = null;
+  let variantWithLeastOccurrences = null;
   
   if (hasAnyColor) {
     variantCountByColor = product.productData.variants.reduce((acc: Record<string, number>, variant) => {
@@ -114,7 +114,7 @@ const createProductSet = async (product: CombinedProduct) => {
           const processedCombos = new Set();
           return product.productData.variants
             .map(variant => {
-              let updatedVariant = {...variant};
+              const updatedVariant = {...variant};
               
               if (hasAnySize && !updatedVariant?.size) {
                 const variantsWithSameColor = product.productData.variants
