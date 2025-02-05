@@ -242,8 +242,8 @@ const cleanupRemainingProducts = (remainingProducts: ProductNode[]) => {
               
               if (existingImage) {
                 variantImage = {
-                  id: existingImage.id,
-                  altText: existingImage.alt
+                  id: existingImage?.id,
+                  altText: existingImage?.alt || ''
                 };
               };
             };
@@ -418,8 +418,8 @@ const combineProducts = (products: ProductNode[]) => {
 
             if (existingImage) {
               variantImage = {
-                id: existingImage.id,
-                altText: existingImage.alt
+                id: existingImage?.id,
+                altText: existingImage?.alt || '',
               };
             };
           };
@@ -481,7 +481,9 @@ async function getAllProducts() {
     };
 
     /** Fetch fresh data from Shopify **/
+    console.log("Fetching All Shopify Products");
     const allProducts = await getAllShopifyProducts(GRAPHQL_ENDPOINT, ACCESS_TOKEN);
+    console.log("Fetched All Shopify Products");
     const {combinedProducts, remainingProducts} = combineProducts(allProducts);
     const {newCombinedProducts, finalUnmatched} = cleanupRemainingProducts(remainingProducts);
 

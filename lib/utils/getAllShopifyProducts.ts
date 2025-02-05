@@ -58,7 +58,7 @@ export const getAllShopifyProducts = async (
                 }
               }
             }
-            metafields(first: 40) {
+            metafields(first: 65) {
               nodes {
                 namespace
                 key
@@ -96,7 +96,7 @@ export const getAllShopifyProducts = async (
                       }
                     }
                   }
-                  metafields(first: 28) {
+                  metafields(first: 30) {
                     nodes {
                       namespace
                       key
@@ -122,6 +122,7 @@ export const getAllShopifyProducts = async (
   let cursor: string | null = null;
 
   while (hasNextPage) {
+    console.log("Fetching With Shopify Cursor: ", cursor);
     try {
       const response = await fetch(GRAPHQL_ENDPOINT, {
         method: "POST",

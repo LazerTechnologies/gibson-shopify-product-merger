@@ -52,8 +52,8 @@ export default function UpdateProducts() {
 
     const combinedProducts = products?.combinedProducts;
 
-    const testUpdate = combinedProducts?.slice(0, 1);
-
+    const testUpdate = combinedProducts?.slice(8, 9);
+    
     try {
       const response = await fetch("/api/products/merge", {
         method: "POST",

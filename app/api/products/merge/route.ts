@@ -1,79 +1,86 @@
 import {NextResponse} from "next/server";
 
 /** Types **/
-import type {
-  CombinedProduct,
-  Metafield,
-  ProductOption,
-  ProductCreateResponse,
-  VariantCreateResponse,
-} from "@/lib/types/ShopifyData";
+import type {CombinedProduct, Metafield} from "@/lib/types/ShopifyData";
 
 /** Queries **/
-import {
-  mutationProductCreate,
-  mutationProductVariantsBulkCreate,
-  mutationProductVariantsBulkDelete,
-  mutationFileUpdate,
-} from "@/queries";
+import {mutationProductSet} from "@/queries";
 
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2025-01/graphql.json`;
 
-const updateImageAltText = async (mediaId: string, color: string, currentAltText: string) => {
-  const newAltText = `${color} | ${currentAltText}`;
-  
-  const response = await fetch(GRAPHQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "X-Shopify-Access-Token": ACCESS_TOKEN!,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: mutationFileUpdate(),
-      variables: {
-        input: {
-          id: mediaId,
-          alt: newAltText
-        }
-      }
-    })
-  });
-
-  const data = await response.json();
-  return data;
-};
-
-const createShopifyProduct = async (product: CombinedProduct) => {
-  /** Create The Product Handle - Remove White Space And Replace With A Dash **/
+const createProductSet = async (product: CombinedProduct) => {
+  /** Get product handle **/
   const productHandle = product?.productData?.baseTitle?.replace(/\s+/g, '-');
 
-  /** Get unique size and color options from variants **/
-  const sizeOptions = [...new Set(product.productData.variants.map(v => v.size))].filter(Boolean);
-  const colorOptions = [...new Set(product.productData.variants.map(v => v.color))].filter(Boolean);
+  /** Get unique options and check if any variants have size or color **/
+  const hasAnySize = product.productData.variants.some(v => v.size);
+  const hasAnyColor = product.productData.variants.some(v => v.color);
+  
+  const sizeOptions = hasAnySize ? 
+    [...new Set(product.productData.variants.map(v => v.size))].filter(Boolean) : [];
+  const colorOptions = hasAnyColor ? 
+    [...new Set(product.productData.variants.map(v => v.color))].filter(Boolean) : [];
 
-  /** Only add Default Title if we have options **/
-  if (sizeOptions.length > 0 || colorOptions.length > 0) {
-    sizeOptions.unshift("Default Title");
-  };
+  /** Analyze variant distribution by color and find variant with least occurrences **/
+  let variantCountByColor: Record<string, number> = {};
+  let variantWithLeastOccurrences: any = null;
+  
+  if (hasAnyColor) {
+    variantCountByColor = product.productData.variants.reduce((acc: Record<string, number>, variant) => {
+      const color = variant.color || 'No Color';
+      acc[color] = (acc[color] || 0) + 1;
+      return acc;
+    }, {});
 
-  /** Create The Product Input For The Product Create Mutation **/
-  const productCreateInput = {
-    media: product?.productData?.media?.edges?.length > 0 ? product?.productData?.media?.edges?.map((media) => {
-      return {
-        alt: media?.node?.alt,
-        mediaContentType: "IMAGE",
-        originalSource: media?.node?.image?.url,
-      };
-    }) : null,
-    input: {
+    console.log('Variant distribution by color:', variantCountByColor);
+
+    /** Find color with minimum variants and its corresponding variant **/
+    const minColor = Object.entries(variantCountByColor)
+      .reduce<{color: string, count: number}>((min, [color, count]) => 
+        count < min.count && color !== 'No Color' ? {color, count} : min,
+        {color: '', count: Infinity}
+      );
+
+    console.log('Color with minimum variants:', minColor);
+
+    if (minColor.color) {
+      variantWithLeastOccurrences = product.productData.variants.find(v => v.color === minColor.color);
+    }
+  }
+
+  /** Get all unique images **/
+  const mediaFromProduct = product?.productData?.media?.edges?.map(media => ({
+    id: media?.node?.id,
+    alt: media?.node?.alt,
+    contentType: "IMAGE",
+  })) || [];
+
+  const variantImages = product?.productData?.variants
+    ?.filter(variant => variant?.featuredImage?.id)
+    ?.map(variant => ({
+      id: variant?.featuredImage?.id,
+      alt: `${variant?.color || 'Default'} | ${variant?.featuredImage?.altText}`,
+      contentType: "IMAGE"
+    })) || [];
+
+  /** Combine and deduplicate images based on id **/
+  const allFiles = [...mediaFromProduct, ...variantImages]
+    .filter((file, index, self) => 
+      index === self.findIndex(f => f.id === file.id)
+    );
+
+  const productSetInput = {
+    synchronous: true,
+    productSet: {
       title: product?.productData?.baseTitle,
       descriptionHtml: product?.productData?.description,
       handle: productHandle,
       productType: product?.productData?.productType,
       status: "DRAFT",
       vendor: product?.productData?.vendor,
+      files: allFiles.length > 0 ? allFiles : null,
       productOptions: [
         ...(sizeOptions.length > 0 ? [{
           name: "Size",
@@ -98,250 +105,124 @@ const createShopifyProduct = async (product: CombinedProduct) => {
         }))
       : null,
       seo: {
-        title: product?.productData?.seo?.title,
-        description: product?.productData?.seo?.description,
-      }
+        title: product?.productData?.title,
+        description: product?.productData?.description,
+      },
+      variants: product?.productData?.variants?.length > 0 ? 
+        /** Track processed option combinations to avoid duplicates **/
+        (() => {
+          const processedCombos = new Set();
+          return product.productData.variants
+            .map(variant => {
+              let updatedVariant = {...variant};
+              
+              if (hasAnySize && !updatedVariant?.size) {
+                const variantsWithSameColor = product.productData.variants
+                  .filter(v => v.color === updatedVariant.color && v.size);
+                if (variantsWithSameColor.length > 0) {
+                  updatedVariant.size = variantsWithSameColor[0].size;
+                } else {
+                  return null;
+                }
+              }
+              
+              if (hasAnyColor && (!updatedVariant?.color || updatedVariant.color === 'No Color') && variantWithLeastOccurrences) {
+                updatedVariant.color = variantWithLeastOccurrences.color;
+                if (!updatedVariant.featuredImage) {
+                  updatedVariant.featuredImage = variantWithLeastOccurrences.featuredImage;
+                }
+              }
+
+              /** Create unique key for option combination **/
+              const comboKey = `${updatedVariant.size || ''}-${updatedVariant.color || ''}`;
+              if (processedCombos.has(comboKey)) {
+                return null; /** Skip duplicate combinations **/
+              }
+              processedCombos.add(comboKey);
+
+              return {
+                file: updatedVariant?.featuredImage?.id ? {
+                  id: updatedVariant?.featuredImage?.id,
+                  alt: `${updatedVariant?.color || 'Default'} | ${updatedVariant?.featuredImage?.altText}`,
+                  contentType: "IMAGE",
+                } : null,
+                barcode: updatedVariant?.barcode ?? null,
+                compareAtPrice: updatedVariant?.compareAtPrice ?? null,
+                price: updatedVariant?.price ?? null,
+                taxable: updatedVariant?.taxable ?? true,
+                inventoryItem: {
+                  sku: updatedVariant?.sku,
+                  requiresShipping: updatedVariant?.requiresShipping ?? false,
+                  countryCodeOfOrigin: updatedVariant?.countryOfOrigin ?? null,
+                  harmonizedSystemCode: updatedVariant?.harmonizedSystemCode ?? null,
+                  measurement: {
+                    weight: {
+                      unit: updatedVariant.weightUnit || "POUNDS",
+                      value: updatedVariant.weight || 0,
+                    }
+                  },
+                },
+                metafields: updatedVariant?.metafields?.length > 0 ? 
+                  updatedVariant?.metafields?.filter((metafield: Metafield) => 
+                    metafield.key !== "harmonized_system_code"
+                  ).map((metafield: Metafield) => ({
+                    namespace: metafield?.namespace,
+                    key: metafield?.key,
+                    value: metafield?.value,
+                    type: metafield?.type,
+                  }))
+                : null,
+                optionValues: [
+                  ...(hasAnySize ? [{
+                    optionName: "Size",
+                    name: updatedVariant?.size,
+                  }] : []),
+                  ...(hasAnyColor ? [{
+                    optionName: "Color",
+                    name: updatedVariant?.color,
+                  }] : []),
+                ],
+              }
+            }).filter(Boolean)
+        })() : [],
     }
   };
 
-  console.log("Creating Product");
-  const productCreateResponse = await fetch(GRAPHQL_ENDPOINT, {
+  const productSetRes = await fetch(GRAPHQL_ENDPOINT, {
     method: "POST",
     headers: {
       "X-Shopify-Access-Token": ACCESS_TOKEN!,
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      query: mutationProductCreate(),
-      variables: productCreateInput,
-    })
+      query: mutationProductSet(),
+      variables: productSetInput,
+    }),
   });
-  console.log("Product Created");
 
-  if (!productCreateResponse.ok) {
-    throw new Error(`Failed to fetch products: ${productCreateResponse.statusText}`);
-  };
+  if (!productSetRes.ok) {
+    throw new Error(`Failed to fetch products: ${productSetRes.statusText}`);
+  }
 
-  const productCreateData = await productCreateResponse.json() as ProductCreateResponse;
+  const productCreateData = await productSetRes.json();
   console.log("Product Create Response:", productCreateData);
 
-  /** Check for user errors in product creation **/
   if (productCreateData?.data?.productCreate?.userErrors?.length > 0) {
     console.error("Product Creation Errors:", productCreateData.data.productCreate.userErrors);
     throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.data.productCreate.userErrors));
-  };
-
-  return {productCreateData, productCreateInput};
-};
-
-const createProductVariants = async (product: CombinedProduct, productCreateData: ProductCreateResponse) => {
-  const productId = productCreateData?.data?.productCreate?.product?.id;
-
-  /** Get the option IDs for Size and Color **/
-  const sizeOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: ProductOption) => 
-    option.name === "Size"
-  )?.id;
-
-  const colorOptionId = productCreateData?.data?.productCreate?.product?.options?.find((option: ProductOption) => 
-    option.name === "Color"
-  )?.id;
-
-  const productVariantsToUpdate = product?.productData?.variants?.filter((variant) => {
-    if (sizeOptionId && colorOptionId) {
-      /** If both size and color options exist, require both **/
-      return variant?.size && variant?.color;
-    } else if (sizeOptionId) {
-      /** If only size option exists, only filter by size **/
-      return variant?.size;
-    } else if (colorOptionId) {
-      /** If only color option exists, only filter by color  **/ 
-      return variant?.color;
-    }
-    return false; /** No valid options found **/
-  });
-
-  /** Create The Structure For The Bulk Variant Input **/
-  const productVariantData = productVariantsToUpdate?.length > 0 ? 
-    productVariantsToUpdate?.map(variant => {
-      /** Ensure we have either size or color values **/
-      const optionValues = [];
-      if (sizeOptionId && variant.size) {
-        optionValues.push({
-          name: variant.size,
-          optionId: sizeOptionId
-        });
-      }
-      if (colorOptionId && variant.color) {
-        optionValues.push({
-          name: variant.color,
-          optionId: colorOptionId
-        });
-      }
-
-      return {
-        barcode: variant?.barcode ?? null,
-        compareAtPrice: variant?.compareAtPrice ?? null,
-        price: variant?.price ?? null,
-        taxable: variant?.taxable ?? true,
-        inventoryItem: {
-          sku: variant?.sku,
-          requiresShipping: variant?.requiresShipping ?? false,
-          countryCodeOfOrigin: variant?.countryOfOrigin ?? null,
-          harmonizedSystemCode: variant?.harmonizedSystemCode ?? null,
-          measurement: {
-            weight: {
-              unit: variant.weightUnit || "POUNDS",
-              value: variant.weight || 0,
-            }
-          },
-        },
-        mediaId: variant?.featuredImage?.id ? variant?.featuredImage?.id : null,
-        metafields: variant?.metafields?.length > 0 ? 
-          variant?.metafields?.filter((metafield: Metafield) => 
-            metafield.key !== "harmonized_system_code"
-          ).map((metafield: Metafield) => ({
-            namespace: metafield?.namespace,
-            key: metafield?.key,
-            value: metafield?.value,
-            type: metafield?.type,
-          }))
-        : null,
-        optionValues
-      };
-    })
-  : null;
-
-  const productVariantInput = {
-    productId: productId,
-    variants: productVariantData,
-  };
-  
-  console.log("Creating Product Variants");
-  const productVariantCreateResponse = await fetch(GRAPHQL_ENDPOINT, {
-    method: "POST",
-    headers: {
-      "X-Shopify-Access-Token": ACCESS_TOKEN!,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      query: mutationProductVariantsBulkCreate(),
-      variables: productVariantInput,
-    })
-  });
-  console.log("Product Variants Created");
-
-  const variantCreateData = await productVariantCreateResponse.json() as VariantCreateResponse;
-  console.log("Variant Create Response:", variantCreateData);
-
-  /** Update alt text for unique images only */
-  if (productVariantsToUpdate) {
-    const processedImageIds = new Set();
-    
-    for (const variant of productVariantsToUpdate) {
-      if (variant.featuredImage?.id && variant.color && variant.featuredImage?.altText) {
-        /** Only process each unique image once **/
-        if (!processedImageIds.has(variant.featuredImage.id)) {
-          await updateImageAltText(
-            variant.featuredImage.id,
-            variant.color,
-            variant.featuredImage.altText
-          );
-          processedImageIds.add(variant.featuredImage.id);
-        }
-      }
-    }
   }
 
-  return {variantCreateData, productVariantData};
-};
-
-const deleteDefaultTitleVariant = async (
-  productId: string, 
-  variants: {
-    nodes: Array<{
-      id: string; 
-      title: string;
-    }>;
-  }
-) => {
-  console.log("Deleting Default Title Variant");
-
-  /** Look for variants with "Default Title" in any part of the title **/
-  const defaultTitleVariants = variants?.nodes?.filter(variant => 
-    variant.title.includes("Default Title")
-  );
-  
-  if (defaultTitleVariants.length > 0) {
-    console.log("Found Default Title Variants:", defaultTitleVariants);
-    console.log("Deleting Default Title Variants");
-    
-    const deleteResponse = await fetch(GRAPHQL_ENDPOINT, {
-      method: "POST",
-      headers: {
-        "X-Shopify-Access-Token": ACCESS_TOKEN!,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: mutationProductVariantsBulkDelete(),
-        variables: {
-          productId: productId,
-          variantsIds: defaultTitleVariants.map(variant => variant.id)
-        },
-      })
-    });
-    
-    const deleteData = await deleteResponse.json();
-    console.log("Default Title Variants Deleted:", deleteData);
-    return deleteData;
+  return {
+    productSetInput,
+    productCreateData,
+    product: product?.productData,
   };
-  
-  console.log("No Default Title variants found to delete");
-  return null;
 };
 
-/**
- * I ran into an issue when creating the variants, the first option being created was returning an error 
- * saying that this variant already exists. This is why we are creating the first option to be "Default Title".
- * After we create the variants, we will delete the "Default Title" variant. 
- */
 export async function POST(request: Request) {
   try {
-    const {products} = await request.json();
-
-    const mergedProductsResponse = await Promise.all(products.map(async (product: CombinedProduct) => {
-      const {productCreateData, productCreateInput} = await createShopifyProduct(product);
-
-      const {variantCreateData, productVariantData} = await createProductVariants(product, productCreateData);
-      
-      /** Check for user errors in variant creation **/
-      if (variantCreateData?.data?.productVariantsBulkCreate?.userErrors?.length > 0) {
-        console.error("Variant Creation Errors:", variantCreateData.data.productVariantsBulkCreate.userErrors);
-        return {
-          product: productCreateData?.data?.productCreate?.product,
-          variants: variantCreateData?.data?.productVariantsBulkCreate?.productVariants,
-          error: variantCreateData.data.productVariantsBulkCreate.userErrors,
-          productVariantData: productVariantData,
-          productCreateInput: productCreateInput,
-        };
-      };
-
-      /** Delete the Default Title variant after successful variant creation **/
-      const deleteResult = await deleteDefaultTitleVariant(
-        productCreateData.data.productCreate.product.id,
-        productCreateData.data.productCreate?.product?.variants
-      );
-
-      return {
-        product: productCreateData?.data?.productCreate?.product,
-        variants: variantCreateData?.data?.productVariantsBulkCreate?.productVariants,
-        productCreateData: productCreateData,
-        productVariantData: productVariantData,
-        defaultTitleDeletion: deleteResult,
-        productCreateInput: productCreateInput,
-      };
-    }));
-
-    console.log("Final merged response:", mergedProductsResponse);
+    const {products}: {products: CombinedProduct[]} = await request.json();
+    const mergedProductsResponse = await Promise.all(products.map(createProductSet));
 
     return NextResponse.json(
       {
@@ -353,5 +234,5 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Error updating products: ", error);
     return NextResponse.json({ error: `Error updating products: ${error}` }, { status: 500 });
-  };
+  }
 }
