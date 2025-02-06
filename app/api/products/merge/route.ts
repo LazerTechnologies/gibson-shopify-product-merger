@@ -1,14 +1,48 @@
 import {NextResponse} from "next/server";
+import fs from "fs/promises";
+import path from "path";
 
 /** Types **/
 import type {CombinedProduct, Metafield} from "@/lib/types/ShopifyData";
 
 /** Queries **/
-import {mutationProductSet} from "@/queries";
+import {mutationProductSet, mutationFileUpdate} from "@/queries";
 
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2025-01/graphql.json`;
+const UPDATES_FILE_PATH = path.join(process.cwd(), "data", "product-updates.json");
+
+const updateImageAltText = async (
+  mediaId: string | null, 
+  color: string, 
+  currentAltText: string
+) => {
+  
+  if (!mediaId) return null;
+
+  const newAltText = `${color} | ${currentAltText}`;
+  
+  const response = await fetch(GRAPHQL_ENDPOINT, {
+    method: "POST",
+    headers: {
+      "X-Shopify-Access-Token": ACCESS_TOKEN!,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      query: mutationFileUpdate(),
+      variables: {
+        input: {
+          id: mediaId,
+          alt: newAltText
+        }
+      }
+    })
+  });
+
+  const data = await response.json();
+  return data;
+};
 
 const createProductSet = async (product: CombinedProduct) => {
   /** Get product handle **/
@@ -50,7 +84,7 @@ const createProductSet = async (product: CombinedProduct) => {
     }
   }
 
-  /** Get all unique images **/
+  /** Get all unique images and update their alt text **/
   const mediaFromProduct = product?.productData?.media?.edges?.map(media => ({
     id: media?.node?.id,
     alt: media?.node?.alt,
@@ -61,7 +95,8 @@ const createProductSet = async (product: CombinedProduct) => {
     ?.filter(variant => variant?.featuredImage?.id)
     ?.map(variant => ({
       id: variant?.featuredImage?.id,
-      alt: `${variant?.color || 'Default'} | ${variant?.featuredImage?.altText}`,
+      alt: variant?.featuredImage?.altText,
+      color: variant?.color,
       contentType: "IMAGE"
     })) || [];
 
@@ -70,6 +105,14 @@ const createProductSet = async (product: CombinedProduct) => {
     .filter((file, index, self) => 
       index === self.findIndex(f => f.id === file.id)
     );
+
+  /** Update alt text for all unique images **/
+  await Promise.all(allFiles.map(async (file) => {
+    const matchingVariant = variantImages.find(v => v.id === file.id);
+    if (matchingVariant?.color) {
+      await updateImageAltText(file?.id, matchingVariant.color, file.alt || '');
+    }
+  }));
 
   const productSetInput = {
     synchronous: true,
@@ -80,7 +123,11 @@ const createProductSet = async (product: CombinedProduct) => {
       productType: product?.productData?.productType,
       status: "DRAFT",
       vendor: product?.productData?.vendor,
-      files: allFiles.length > 0 ? allFiles : null,
+      files: allFiles.length > 0 ? allFiles.map(file => ({
+        id: file.id,
+        alt: file.alt,
+        contentType: "IMAGE"
+      })) : null,
       productOptions: [
         ...(sizeOptions.length > 0 ? [{
           name: "Size",
@@ -207,10 +254,10 @@ const createProductSet = async (product: CombinedProduct) => {
   const productCreateData = await productSetRes.json();
   console.log("Product Create Response:", productCreateData);
 
-  if (productCreateData?.data?.productCreate?.userErrors?.length > 0) {
-    console.error("Product Creation Errors:", productCreateData.data.productCreate.userErrors);
-    throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.data.productCreate.userErrors));
-  }
+  if (productCreateData?.data?.productSet?.userErrors?.length > 0) {
+    console.error("Product Creation Errors:", productCreateData.data.productSet.userErrors);
+    throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.data.productSet.userErrors));
+  };
 
   return {
     productSetInput,
@@ -220,19 +267,45 @@ const createProductSet = async (product: CombinedProduct) => {
 };
 
 export async function POST(request: Request) {
+  const updates = {
+    successfulUpdates: [] as {productId: string, title: string}[],
+    failedUpdates: [] as {title: string, error: string}[]
+  };
+
   try {
     const {products}: {products: CombinedProduct[]} = await request.json();
-    const mergedProductsResponse = await Promise.all(products.map(createProductSet));
+    
+    for (const product of products) {
+      try {
+        const result = await createProductSet(product);
+        updates.successfulUpdates.push({
+          productId: result.productCreateData.data.productCreate.product.id,
+          title: product.productData.baseTitle
+        });
+      } catch (error) {
+        updates.failedUpdates.push({
+          title: product.productData.baseTitle,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    }
+
+    /** Save updates to file **/
+    await fs.mkdir(path.dirname(UPDATES_FILE_PATH), {recursive: true});
+    await fs.writeFile(
+      UPDATES_FILE_PATH,
+      JSON.stringify(updates, null, 2)
+    );
 
     return NextResponse.json(
       {
-        message: "Products Created Successfully",
-        updatedProducts: mergedProductsResponse,
+        message: "Products Processing Complete",
+        updates
       },
       {status: 200}
     );
   } catch (error) {
-    console.error("Error updating products: ", error);
-    return NextResponse.json({ error: `Error updating products: ${error}` }, { status: 500 });
+    console.error("Error processing products: ", error);
+    return NextResponse.json({ error: `Error processing products: ${error}` }, { status: 500 });
   }
 }

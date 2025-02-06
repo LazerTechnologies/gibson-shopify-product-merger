@@ -1,0 +1,45 @@
+{
+  "successfulUpdates": [],
+  "failedUpdates": [
+    {
+      "title": "Lifestyle The House of Stathopoulo Tee Maroon",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-The-House-of-Stathopoulo-Tee-Maroon' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle H Bar C x Gibson Dove Unisex Tour Jacket Exclusive",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-H-Bar-C-x-Gibson-Dove-Unisex-Tour-Jacket-Exclusive' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Les Paul 59 Driver Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Les-Paul-59-Driver-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Women Who Rock x Gibson Crewneck Sweatshirt",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Women-Who-Rock-x-Gibson-Crewneck-Sweatshirt' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Women Who Rock x Gibson Baseball Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Women-Who-Rock-x-Gibson-Baseball-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Women Who Rock x Gibson Tee",
+      "error": "Cannot read properties of undefined (reading 'product')"
+    },
+    {
+      "title": "Lifestyle USAMade Tee",
+      "error": "Cannot read properties of undefined (reading 'product')"
+    },
+    {
+      "title": "Lifestyle Gibson USA Womens Tee",
+      "error": "Cannot read properties of undefined (reading 'product')"
+    },
+    {
+      "title": "Lifestyle Soundwave Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Soundwave-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Floral Block Logo Tee",
+      "error": "Cannot read properties of undefined (reading 'product')"
+    }
+  ]
+}
