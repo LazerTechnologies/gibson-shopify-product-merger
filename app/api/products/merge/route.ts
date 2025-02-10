@@ -77,8 +77,6 @@ const createProductSet = async (product: CombinedProduct) => {
         {color: '', count: Infinity}
       );
 
-    console.log('Color with minimum variants:', minColor);
-
     if (minColor.color) {
       variantWithLeastOccurrences = product.productData.variants.find(v => v.color === minColor.color);
     }
@@ -114,6 +112,10 @@ const createProductSet = async (product: CombinedProduct) => {
     }
   }));
 
+  /** Prepare tags array with new_merch_product tag **/
+  const productTags = product?.productData?.tags || [];
+  const updatedTags = [...productTags, 'new_merch_product'];
+
   const productSetInput = {
     synchronous: true,
     productSet: {
@@ -142,7 +144,7 @@ const createProductSet = async (product: CombinedProduct) => {
           })),
         }] : [])
       ],
-      tags: product?.productData?.tags?.length > 0 ? product?.productData?.tags : null,
+      tags: updatedTags,
       metafields: product?.productData?.metafields?.length > 0 ? 
         product?.productData?.metafields?.map((metafield: Metafield) => ({
           namespace: metafield?.namespace,
@@ -186,7 +188,7 @@ const createProductSet = async (product: CombinedProduct) => {
                 return null; /** Skip duplicate combinations **/
               }
               processedCombos.add(comboKey);
-
+              
               return {
                 file: updatedVariant?.featuredImage?.id ? {
                   id: updatedVariant?.featuredImage?.id,
@@ -252,7 +254,6 @@ const createProductSet = async (product: CombinedProduct) => {
   }
 
   const productCreateData = await productSetRes.json();
-  console.log("Product Create Response:", productCreateData);
 
   if (productCreateData?.data?.productSet?.userErrors?.length > 0) {
     console.error("Product Creation Errors:", productCreateData.data.productSet.userErrors);
@@ -261,7 +262,7 @@ const createProductSet = async (product: CombinedProduct) => {
 
   return {
     productSetInput,
-    productCreateData,
+    productSetData: productCreateData?.data?.productSet?.product,
     product: product?.productData,
   };
 };
@@ -279,12 +280,12 @@ export async function POST(request: Request) {
       try {
         const result = await createProductSet(product);
         updates.successfulUpdates.push({
-          productId: result.productCreateData.data.productCreate.product.id,
-          title: product.productData.baseTitle
+          productId: result?.productSetData?.id,
+          title: product?.productData?.baseTitle
         });
       } catch (error) {
         updates.failedUpdates.push({
-          title: product.productData.baseTitle,
+          title: product?.productData?.baseTitle,
           error: error instanceof Error ? error.message : String(error)
         });
       }

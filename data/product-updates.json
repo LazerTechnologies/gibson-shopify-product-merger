@@ -1,5 +1,618 @@
 {
-  "successfulUpdates": [],
+  "successfulUpdates": [
+    {
+      "productId": "gid://shopify/Product/8172073877683",
+      "title": "Lifestyle Electronic Development Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172073943219",
+      "title": "Lifestyle Screaming Eagle Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172073975987",
+      "title": "Lifestyle Eagle Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074041523",
+      "title": "Lifestyle Maestro Trumpets Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074074291",
+      "title": "Lifestyle Catalog Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074139827",
+      "title": "Lifestyle Superior Sound Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074172595",
+      "title": "Lifestyle Collegiate Tee Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074238131",
+      "title": "Lifestyle Since 1894 Ringer Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074270899",
+      "title": "Lifestyle Handmade in Nashville Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074303667",
+      "title": "Lifestyle The Band Tee Army"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074336435",
+      "title": "Lifestyle Thunderbird T"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074369203",
+      "title": "Lifestyle Guitars and Amplifiers Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074467507",
+      "title": "Lifestyle Acoustic Label Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074533043",
+      "title": "Lifestyle Script Logo Structured Snapback"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074598579",
+      "title": "Lifestyle Sister Rosetta Tharpe Tour Jacket"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074696883",
+      "title": "Lifestyle Sister Rosetta Tharpe Womens Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074893491",
+      "title": "Lifestyle Slash Skully Pullover Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172074991795",
+      "title": "Lifestyle Sister Rosetta Tharpe Unisex Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075122867",
+      "title": "Lifestyle Slash Block Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075188403",
+      "title": "Lifestyle Slash Skully Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075319475",
+      "title": "Lifestyle Les Paul Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075450547",
+      "title": "Lifestyle Flying V FullZip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075483315",
+      "title": "Lifestyle Hummingbird Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075548851",
+      "title": "Lifestyle SG Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075581619",
+      "title": "Lifestyle Floral Block Logo Long Sleeve Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075647155",
+      "title": "Lifestyle Les Paul Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075679923",
+      "title": "Lifestyle Kramer Tiger Stripe Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075778227",
+      "title": "Lifestyle Kramer Tiger Stripe Tee X"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075876531",
+      "title": "Lifestyle Distressed Gibson Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172075974835",
+      "title": "Lifestyle Kramer Tiger Stripe Tee Heather"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076007603",
+      "title": "Lifestyle USA Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076105907",
+      "title": "Lifestyle Gibson FullZip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076204211",
+      "title": "Lifestyle The Gibson Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076335283",
+      "title": "Lifestyle Floral Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076466355",
+      "title": "Lifestyle Star Logo Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076597427",
+      "title": "Lifestyle Metal and Monsters Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076728499",
+      "title": "Lifestyle Kramer Neon Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076859571",
+      "title": "Lifestyle Maestro FuzzTone Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172076925107",
+      "title": "Lifestyle Kramer Made to Rock Hard Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077023411",
+      "title": "Lifestyle Kramer Neon Pullover Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077154483",
+      "title": "Lifestyle Kramer Made to Rock Hard Fullzip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077220019",
+      "title": "Lifestyle Kramer Checkered Flag Cutoff Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077383859",
+      "title": "Lifestyle Dark Camo Windbreaker"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077580467",
+      "title": "Lifestyle Kramer Camo Fullzip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077678771",
+      "title": "Lifestyle Imogene Willie x Gibson The Western Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077809843",
+      "title": "Lifestyle Les Paul Signature Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172077973683",
+      "title": "Lifestyle Imogene Willie x Gibson Purple Skull Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078170291",
+      "title": "Lifestyle Gibson Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078268595",
+      "title": "Lifestyle imogene willie x Gibson Gibson Story Tee Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078399667",
+      "title": "Lifestyle Imogene Willie x Gibson Longsleeve Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078530739",
+      "title": "Lifestyle imogene willie x Gibson Music City Tee Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078661811",
+      "title": "Lifestyle Imogene Willie x Gibson Snake on Guitar Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078694579",
+      "title": "Lifestyle imogene willie x Gibson Music City Jacket Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078760115",
+      "title": "Lifestyle Imogene Willie x Gibson GG Sales Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078825651",
+      "title": "Lifestyle Imogene Willie x Gibson Slash Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172078891187",
+      "title": "Lifestyle Imogene Willie x Gibson The Reaper Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079022259",
+      "title": "Lifestyle Imogene Willie x Gibson The Reaper Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079153331",
+      "title": "Lifestyle Farewell Tour x Gibson Crewneck Carbon"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079218867",
+      "title": "Lifestyle Gibson Custom Gold Star Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079317171",
+      "title": "Lifestyle Gibson Garage Shop Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079481011",
+      "title": "Lifestyle Gibson Custom T Heathered"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079546547",
+      "title": "Lifestyle Farewell Tour x Gibson Gold Logo Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079743155",
+      "title": "Lifestyle Farewell Tour x Gibson Clean Longsleeve Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079874227",
+      "title": "Lifestyle Adam Jones Dog Daze Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172079939763",
+      "title": "Lifestyle Classic Designs Modern Edge Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080070835",
+      "title": "Lifestyle Kramer FM Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080201907",
+      "title": "Lifestyle Kramer Leopard Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080300211",
+      "title": "Lifestyle Boogie Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080365747",
+      "title": "Lifestyle MESA Engineering Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080496819",
+      "title": "Lifestyle Welcome to Tube Town Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080627891",
+      "title": "Lifestyle Boogie Van Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080791731",
+      "title": "Lifestyle Marching Tubes Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080857267",
+      "title": "Lifestyle MesaBoogie Classic Logo Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080922803",
+      "title": "Lifestyle imogene willie x Gibson Headstocks Tee Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172080988339",
+      "title": "Lifestyle Imogene Willie x Gibson Headstock Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081119411",
+      "title": "Lifestyle imogene willie x Gibson Gibson Skull Tee Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081217715",
+      "title": "Lifestyle Screaming Eagle Fullzip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081348787",
+      "title": "Lifestyle Handmade Guitars Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081479859",
+      "title": "Lifestyle Camo Pullover"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081578163",
+      "title": "Lifestyle H Bar C x Gibson J200 Tencel Mens Shirt"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081709235",
+      "title": "Lifestyle H Bar C x Gibson J200 Odessa Unisex Jacket"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081774771",
+      "title": "Lifestyle H Bar C x Gibson J200 Tencel Womens Shirt"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081807539",
+      "title": "Lifestyle H Bar C x Gibson J200 Odessa Unisex Jacket Extra"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081840307",
+      "title": "Lifestyle Imogene Willie x Gibson The Crown Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172081938611",
+      "title": "Lifestyle Imogene Willie x Gibson Crewneck Sweatshirt Faded"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082004147",
+      "title": "Lifestyle Nashville Womens Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082069683",
+      "title": "Lifestyle Trucker Snapback"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082167987",
+      "title": "Lifestyle Les Paul Crewneck Apparel"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082299059",
+      "title": "Lifestyle Tristar Les Paul Tee Apparel"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082430131",
+      "title": "Lifestyle Boogie Van Baseball Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082528435",
+      "title": "Lifestyle Tristar Tank"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082626739",
+      "title": "Lifestyle Tristar Pullover Hoodie Apparel"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082692275",
+      "title": "Lifestyle Imogene Willie x Gibson Support Live Music Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082725043",
+      "title": "Lifestyle Tristar Fullzip Navy Nashville Apparel Collection"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082823347",
+      "title": "Lifestyle Tristar Baseball Tee Apparel"
+    },
+    {
+      "productId": "gid://shopify/Product/8172082954419",
+      "title": "Lifestyle Epiphone Vintage Logo Pullover Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083085491",
+      "title": "Lifestyle Epiphone Logo T"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083183795",
+      "title": "Lifestyle Epiphone Frontier Tee X"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083314867",
+      "title": "Lifestyle Gibson x Everly Brothers Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083413171",
+      "title": "Lifestyle Epiphone Frontier Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083577011",
+      "title": "Lifestyle Firebird T"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083675315",
+      "title": "Lifestyle Gibson Patch Jacket"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083708083",
+      "title": "Lifestyle Gibson x Everly Brothers Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083806387",
+      "title": "Lifestyle Gibson x Everly Brothers Fullzip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083871923",
+      "title": "Lifestyle Billy Reid x Gibson Bandana Tunic Natural Billy Reid Tunic"
+    },
+    {
+      "productId": "gid://shopify/Product/8172083970227",
+      "title": "Lifestyle Billy Reid x Gibson Cardigan Sweater Prairie Sand Billy Reid"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084035763",
+      "title": "Lifestyle Billy Reid x Gibson Muscle Shoals Music Row Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084068531",
+      "title": "Lifestyle imogene willie x Gibson The Funk Tee Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084134067",
+      "title": "Lifestyle Billy Reid x Gibson Dover Crewneck Sweatshirt"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084232371",
+      "title": "Lifestyle Imogene Willie x Gibson The Crown Tee Vintage Extra"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084297907",
+      "title": "Lifestyle Farewell Tour x Gibson Crewneck"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084396211",
+      "title": "Lifestyle Epiphone Vintage Logo Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084428979",
+      "title": "Lifestyle Billy Reid x Gibson Crewneck Billy Reid"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084560051",
+      "title": "Lifestyle Billy Reid x Gibson Embroidered Denim Shirt"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084625587",
+      "title": "Lifestyle Aviator Nation X Gibson USA Crew Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084658355",
+      "title": "Lifestyle Billy Reid x Gibson Western Shirt"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084691123",
+      "title": "Lifestyle Gibson Logo Shirt"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084756659",
+      "title": "Lifestyle Epiphone Vintage Badge Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172084854963",
+      "title": "Lifestyle Billy Reid x Gibson Biker Jacket"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085018803",
+      "title": "Lifestyle Aviator Nation X Gibson Boyfriend Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085117107",
+      "title": "Lifestyle Aviator Nation X Gibson Boyfriend Tee Extra"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085215411",
+      "title": "Lifestyle Epiphone Tree of Life Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085313715",
+      "title": "Lifestyle Billy Reid x Gibson Hummingbird Dress"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085444787",
+      "title": "Lifestyle Aviator Nation X Gibson USA Womens Racer Tank"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085543091",
+      "title": "Lifestyle Guitars of the Stars Shop Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085641395",
+      "title": "Lifestyle Aviator Nation X Gibson Baseball Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085772467",
+      "title": "Lifestyle Aviator Nation X Gibson Hummingbird Zip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085870771",
+      "title": "Lifestyle Adam Jones The Witness Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085903539",
+      "title": "Lifestyle Aviator Nation X Gibson Moto Zip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085936307",
+      "title": "Lifestyle Adam Jones Dog Daze Fullzip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172085969075",
+      "title": "Lifestyle Adam Jones 1979 Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086034611",
+      "title": "Lifestyle Masterbilt Strings Tee Sky"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086165683",
+      "title": "Lifestyle Epiphone 150th Anniversary Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086263987",
+      "title": "Lifestyle H Bar C x Gibson Dove Tee Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086395059",
+      "title": "Lifestyle H Bar C x Gibson Dove Denim Shirt Exclusive"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086460595",
+      "title": "Lifestyle Frets Heard Round the World Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086526131",
+      "title": "Lifestyle Gibson Gives x MusiCares Music on a Mission Sweatshirt"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086591667",
+      "title": "Lifestyle Original Tone Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086657203",
+      "title": "Lifestyle Gibson Gives x MusiCares Music on a Mission Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086722739",
+      "title": "Lifestyle Quality Fretted Instruments Tee Vintage"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086788275",
+      "title": "Lifestyle Gibson Gives x MusiCares Music on a Mission Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086853811",
+      "title": "Lifestyle 70s Tour Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086886579",
+      "title": "Lifestyle Epiphone Fullzip Hoodie"
+    },
+    {
+      "productId": "gid://shopify/Product/8172086984883",
+      "title": "Lifestyle Epiphone Electar Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087050419",
+      "title": "Lifestyle Flying V Formation Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087115955",
+      "title": "Lifestyle Four Explorers Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087378099",
+      "title": "Lifestyle Explorer Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087410867",
+      "title": "Lifestyle 335 Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087443635",
+      "title": "Lifestyle Banner Tee"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087509171",
+      "title": "Lifestyle Epiphone Logo Womens VNeck T"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087607475",
+      "title": "Lifestyle Epiphone Badge T"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087836851",
+      "title": "Lifestyle Gibson Vintage Lighted Wall Clock Kalamazoo EU"
+    },
+    {
+      "productId": "gid://shopify/Product/8172087902387",
+      "title": "Lifestyle Four Explorers Tee Extra"
+    }
+  ],
   "failedUpdates": [
     {
       "title": "Lifestyle The House of Stathopoulo Tee Maroon",
@@ -23,15 +636,15 @@
     },
     {
       "title": "Lifestyle Women Who Rock x Gibson Tee",
-      "error": "Cannot read properties of undefined (reading 'product')"
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Women-Who-Rock-x-Gibson-Tee' already in use. Please provide a new handle.\"}]"
     },
     {
       "title": "Lifestyle USAMade Tee",
-      "error": "Cannot read properties of undefined (reading 'product')"
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-USAMade-Tee' already in use. Please provide a new handle.\"}]"
     },
     {
       "title": "Lifestyle Gibson USA Womens Tee",
-      "error": "Cannot read properties of undefined (reading 'product')"
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-USA-Womens-Tee' already in use. Please provide a new handle.\"}]"
     },
     {
       "title": "Lifestyle Soundwave Tee",
@@ -39,7 +652,95 @@
     },
     {
       "title": "Lifestyle Floral Block Logo Tee",
-      "error": "Cannot read properties of undefined (reading 'product')"
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Floral-Block-Logo-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Rainbow Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Rainbow-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Logo LED 30",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Logo-LED-30' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Mother of Pearl Logo Inlay Premium Phone Case iPhone 678",
+      "error": "Product Creation Failed: [{\"code\":\"PRODUCT_OPTIONS_INPUT_MISSING\",\"field\":[\"input\",\"productOptions\"],\"message\":\"Product options input is required when updating variants\"}]"
+    },
+    {
+      "title": "Lifestyle AXE HEAVEN Adam Jones Silverburst Les Paul 14 Scale Mini Guitar Model Signed",
+      "error": "Product Creation Failed: [{\"code\":\"PRODUCT_OPTIONS_INPUT_MISSING\",\"field\":[\"input\",\"productOptions\"],\"message\":\"Product options input is required when updating variants\"}]"
+    },
+    {
+      "title": "Lifestyle Epiphone Logo Hat w Pickholder",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Epiphone-Logo-Hat-w-Pickholder' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Gibson Custom Logo LED Gold",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-Custom-Logo-LED-Gold' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Imogene Willie x Gibson Headstock Trucker Hat Sand",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Imogene-Willie-x-Gibson-Headstock-Trucker-Hat-Sand' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Gibson Cuffed Beanie Navy",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-Cuffed-Beanie-Navy' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Ebbets Field Vintage Ballcap Navy",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Ebbets-Field-Vintage-Ballcap-Navy' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Gibson Vintage Lighted Wall Clock Handmade Strings EU",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-Vintage-Lighted-Wall-Clock-Handmade-Strings-EU' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Gibson Vintage Lighted Wall Clock Strings",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-Vintage-Lighted-Wall-Clock-Strings' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Gibson Vintage Lighted Wall Clock Gibson Inc",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-Vintage-Lighted-Wall-Clock-Gibson-Inc' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle AN X Gibson Trucker Black",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-AN-X-Gibson-Trucker-Black' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Gibson Gives x MusiCares Music on a Mission Sweatshirt",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-Gives-x-MusiCares-Music-on-a-Mission-Sweatshirt' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Original Tone Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Original-Tone-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Quality Fretted Instruments Tee Vintage",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Quality-Fretted-Instruments-Tee-Vintage' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Gibson Gives x MusiCares Music on a Mission Hoodie",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Gibson-Gives-x-MusiCares-Music-on-a-Mission-Hoodie' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle 70s Tour Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-70s-Tour-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Flying V Formation Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Flying-V-Formation-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Explorer Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Explorer-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle 335 Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-335-Tee' already in use. Please provide a new handle.\"}]"
+    },
+    {
+      "title": "Lifestyle Banner Tee",
+      "error": "Product Creation Failed: [{\"code\":\"HANDLE_NOT_UNIQUE\",\"field\":[\"input\",\"handle\"],\"message\":\"Handle 'Lifestyle-Banner-Tee' already in use. Please provide a new handle.\"}]"
     }
   ]
 }
