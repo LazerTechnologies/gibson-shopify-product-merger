@@ -22,22 +22,26 @@ export async function GET() {
         console.log("Reading from cache...");
         const fileContent = await fs.readFile(CACHE_FILE_PATH, 'utf-8');
         const cachedData = JSON.parse(fileContent);
-        return {
+        return NextResponse.json({
           mergedProducts: cachedData.data,
-        };
+        });
       }
     } catch (error) {
       /** Cache file doesn't exist or other error, continue to fetch **/
       console.log(`Cache not available, fetching from Shopify... ${error}`);
-    };
+    }
 
+    console.log("Fetching fresh data from Shopify...");
     const allProducts = await getAllShopifyMergedProducts(GRAPHQL_ENDPOINT, ACCESS_TOKEN);
 
-    /** Save to cache **/
+    /** Save to cache with pretty formatting **/
     await fs.mkdir(path.dirname(CACHE_FILE_PATH), {recursive: true});
     await fs.writeFile(
       CACHE_FILE_PATH,
-      JSON.stringify({data: allProducts, timestamp: Date.now()})
+      JSON.stringify({
+        data: allProducts,
+        timestamp: Date.now()
+      }, null, 2)
     );
 
     return NextResponse.json({

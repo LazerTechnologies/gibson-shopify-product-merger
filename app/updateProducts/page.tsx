@@ -48,13 +48,12 @@ export default function UpdateProducts() {
     console.log("Updating products...");
     setIsLoading(true);
     try {
-      // Implementation for updating products will go here
       console.log("Products to update:", products?.mergedProducts);
     } catch (error) {
       console.error("Error updating products:", error);
     } finally {
       setIsLoading(false);
-    }
+    };
   };
 
   return (

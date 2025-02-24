@@ -38,21 +38,20 @@ export const getAllShopifyMergedProducts = async (
 
       const {data} = await response.json();
 
-      const products = data.products.edges.map(edge => {
+      const products = data?.products?.edges.map((edge: any) => {
         const node = edge.node;
-        const variantInfo = node.variants.edges[0]?.node || {};
+        const variantInfo = node.variants.edges || {};
+
         return {
           ...node,
           metafields: node.metafields.nodes,
           variants: {
-            edges: [
-              {
-                node: {
-                  ...variantInfo,
-                  metafields: variantInfo.metafields?.nodes || [],
-                },
-              },
-            ],
+            edges: variantInfo?.length > 0 ? variantInfo?.map((variant: any) => ({
+              node: {
+                ...variant?.node,
+                metafields: variant?.node?.metafields?.nodes || [],
+              }
+            })) : [],
           },
         };
       });
