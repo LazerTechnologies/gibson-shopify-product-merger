@@ -87,18 +87,23 @@ const processMergedProduct = async (
     };
   };
 
-  const sanitizedHandle = sanitizeHandle(matchingCsvRow?.newTitle);
+  /** Remove both the parentheses and the color value inside them from title **/
+  const cleanTitle = matchingCsvRow?.newTitle?.replace(/\s*\([^)]*\)\s*$/, '').trim();
+
+  const sanitizedHandle = sanitizeHandle(cleanTitle);
+
+  const productHandle = `${sanitizedHandle}-new`;
 
   const productUpdateInput: ProductUpdateInput = {
     input: {
       id: product?.id,
-      title: matchingCsvRow?.newTitle || null,
+      title: cleanTitle || null,
       vendor: matchingCsvRow?.newBrand || null,
       seo: {
-        title: matchingCsvRow?.newTitle || null,
+        title: cleanTitle || null,
         description: null,
       },
-      handle: sanitizedHandle || null,
+      handle: productHandle || null,
       tags: updatedTags
     }
   };
@@ -167,10 +172,15 @@ export async function POST(request: Request) {
     const csvData = await readCsvFile();
 
     const results = [];
+    let idx: number = 0;
+    
     for (const batch of batches) {
       const batchResults = await Promise.all(
         batch.map(async (product: MergedShopifyProduct) => {
           try {
+            console.log(`Processing product ${idx} of ${mergedProducts?.length}`);
+            idx++;
+            
             /** Process each product in the batch **/
             const result = await processMergedProduct(
               product,
