@@ -1,5 +1,5 @@
 /** Types **/
-import type {ProductNode} from "../types/ShopifyData";
+import type {MergedShopifyProduct, ShopifyProduct, Variant} from "../types/mergedProduct";
 
 /** Queries **/
 import {queryGetAllMergedProducts} from "@/queries";
@@ -7,13 +7,13 @@ import {queryGetAllMergedProducts} from "@/queries";
 export const getAllShopifyMergedProducts = async (
   GRAPHQL_ENDPOINT: string | undefined,
   ACCESS_TOKEN: string | undefined,
-) => {
+): Promise<MergedShopifyProduct[]> => {
 
   if (!GRAPHQL_ENDPOINT || !ACCESS_TOKEN) {
     throw new Error("GRAPHQL_ENDPOINT or ACCESS_TOKEN is not defined");
   };
 
-  let allProducts: ProductNode[] = [];
+  let allProducts: MergedShopifyProduct[] = [];
   let hasNextPage = true;
   let cursor: string | null = null;
 
@@ -38,7 +38,7 @@ export const getAllShopifyMergedProducts = async (
 
       const {data} = await response.json();
 
-      const products = data?.products?.edges.map((edge: any) => {
+      const products = data?.products?.edges.map((edge: {node: ShopifyProduct}) => {
         const node = edge.node;
         const variantInfo = node.variants.edges || {};
 
@@ -46,7 +46,7 @@ export const getAllShopifyMergedProducts = async (
           ...node,
           metafields: node.metafields.nodes,
           variants: {
-            edges: variantInfo?.length > 0 ? variantInfo?.map((variant: any) => ({
+            edges: variantInfo?.length > 0 ? variantInfo?.map((variant: {node: Variant}) => ({
               node: {
                 ...variant?.node,
                 metafields: variant?.node?.metafields?.nodes || [],

@@ -49,6 +49,25 @@ export default function UpdateProducts() {
     setIsLoading(true);
     try {
       console.log("Products to update:", products?.mergedProducts);
+
+      const res = await fetch("/api/products/updateMergeProducts", {
+        method: "POST",
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          mergedProducts: products?.mergedProducts,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Failed to update products: ${res.status}`);
+      };
+
+      const data = await res.json();
+
+      console.log("Updated Products: ", data);
+
     } catch (error) {
       console.error("Error updating products:", error);
     } finally {
