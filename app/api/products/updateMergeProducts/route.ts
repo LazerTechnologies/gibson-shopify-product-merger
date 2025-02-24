@@ -89,8 +89,6 @@ const processMergedProduct = async (
 
   const sanitizedHandle = sanitizeHandle(matchingCsvRow?.newTitle);
 
-  const productHandle = `${sanitizedHandle}-1`;
-
   const productUpdateInput: ProductUpdateInput = {
     input: {
       id: product?.id,
@@ -100,7 +98,7 @@ const processMergedProduct = async (
         title: matchingCsvRow?.newTitle || null,
         description: null,
       },
-      handle: productHandle || null,
+      handle: sanitizedHandle || null,
       tags: updatedTags
     }
   };
