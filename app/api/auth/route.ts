@@ -2,7 +2,7 @@ import {NextResponse} from "next/server";
 
 export async function POST(request: Request) {
   try {
-    const { password } = await request.json();
+    const {password} = await request.json();
     const correctPassword = process.env.PASSWORD;
 
     if (!correctPassword) {
@@ -11,7 +11,7 @@ export async function POST(request: Request) {
         {message: "Server configuration error"},
         {status: 500}
       );
-    }
+    };
 
     if (password === correctPassword) {
       return NextResponse.json(
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
         {message: "Invalid password"},
         {status: 401}
       );
-    }
+    };
   } catch (error) {
     console.error("Error in authentication:", error);
     return NextResponse.json(

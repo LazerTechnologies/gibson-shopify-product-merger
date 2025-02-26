@@ -1,5 +1,6 @@
 export {mutationFileUpdate} from "./mutationFileUpdate";
 export {mutationProductCreate} from "./mutationProductCreate";
+export {mutationProductDelete} from "./mutationProductDelete";
 export {mutationProductSet} from "./mutationProductSet";
 export {mutationProductUpdate} from "./mutationProductUpdate";
 export {mutationProductVariantsBulkCreate} from "./mutationProductVariantsBulkCreate";

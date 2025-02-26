@@ -202,20 +202,35 @@ export default function Home() {
         throw new Error('Failed to delete product');
       }
       
-      await response.json();
+      const result = await response.json();
+
+      /** Get only the successfully deleted product IDs **/
+      const successfullyDeletedIds = result.results
+        .filter((result: {productId: string, success: boolean}) => result?.success)
+        .map((result: {productId: string, success: boolean}) => result?.productId);
       
-      /** Remove the deleted product from the list **/
+      /** Check if any products failed to delete **/
+      const hasFailures = successfullyDeletedIds?.length < productIds?.length;
+      
+      /** Remove only the successfully deleted products from the list **/
       if (products?.products) {
         const updatedProducts = {
           ...products,
-          products: products.products.filter((product: {id: string}) => !productIds.includes(product?.id)),
-          count: products.count - 1
+          products: products?.products?.filter((product: {id: string}) => 
+            !successfullyDeletedIds?.includes(product?.id)
+          ),
+          count: products?.count - successfullyDeletedIds?.length
         };
         setProducts(updatedProducts);
       }
       
       setDeleteSuccess(true);
-      alert('Product deleted successfully!');
+      
+      if (hasFailures) {
+        alert(`Some products were deleted successfully, but others failed. Check console for details.`);
+      } else {
+        alert('Products deleted successfully!');
+      }
     } catch (error) {
       console.error('Error deleting product:', error);
       setDeleteSuccess(false);
@@ -232,7 +247,9 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({password}),
+        body: JSON.stringify({
+          password
+        }),
       });
       
       if (response.ok) {
