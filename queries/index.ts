@@ -7,3 +7,4 @@ export {mutationProductVariantsBulkDelete} from "./mutationProductVariantsBulkDe
 export {queryGetAllLifestyleProducts} from "./queryGetAllLifestyleProducts";
 export {queryGetAllMergedProducts} from "./queryGetAllMergedProducts";
 export {queryGetProductBySkuGetId} from "./queryGetProductBySkuGetId";
+export {queryShopifyProductBySku} from "./queryShopifyProductBySku";

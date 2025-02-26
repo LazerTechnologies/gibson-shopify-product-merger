@@ -123,29 +123,31 @@ export interface CombinedProduct {
         };
       };
     };
-    variants: {
-      size: string;
-      color: string;
-      productTitle: string;
-      title: string;
-      price: string;
-      compareAtPrice: string | null;
-      featuredImage: {
-        id: string | null;
-        altText: string | null;
-      };
-      sku: string;
-      barcode: string | null;
-      metafields: Metafield[];
-      weight: number | null;
-      weightUnit: string | null;
-      countryOfOrigin: string | null;
-      harmonizedSystemCode: string | null;
-      requiresShipping: boolean;
-      taxable: boolean;
-      inventoryQuantity: number;
-    }[];
+    variants: CombinedProductVariant[] | [];
   };
+};
+
+export interface CombinedProductVariant {
+  size: string;
+  color: string;
+  productTitle: string;
+  title: string;
+  price: string;
+  compareAtPrice: string | null;
+  featuredImage: {
+    id: string | null;
+    altText: string | null;
+  };
+  sku: string;
+  barcode: string | null;
+  metafields: Metafield[];
+  weight: number | null;
+  weightUnit: string | null;
+  countryOfOrigin: string | null;
+  harmonizedSystemCode: string | null;
+  requiresShipping: boolean;
+  taxable: boolean;
+  inventoryQuantity: number;
 };
 
 export interface ProductOption {
