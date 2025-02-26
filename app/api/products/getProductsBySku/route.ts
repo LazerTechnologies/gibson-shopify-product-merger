@@ -1,7 +1,7 @@
 import {NextResponse} from "next/server";
 
 /** Types **/
-import type {ProductNode} from "@/lib/types/ShopifyData";
+import type {ProductNode, Metafield} from "@/lib/types/ShopifyData";
 
 /** Queries **/
 import {queryShopifyProductBySku} from "@/queries";
@@ -25,6 +25,7 @@ interface ProcessedProductNode extends ProductNode {
       weightUnit: string | null;
       requiresShipping: boolean | null;
       taxable: boolean | null;
+      metafields?: Metafield[];
     }
   }
 }
@@ -162,7 +163,8 @@ export async function POST(request: Request) {
             weight: variant?.measurement?.weight?.value,
             weightUnit: variant?.measurement?.weight?.unit,
             requiresShipping: variant?.requiresShipping,
-            taxable: variant?.taxable
+            taxable: variant?.taxable,
+            metafields: variant?.metafields?.nodes
           }
         }
       };
@@ -196,6 +198,7 @@ export async function POST(request: Request) {
         vendor: baseProduct.vendor,
         productType: baseProduct.productType,
         description: baseProduct.description,
+        metafields: baseProduct.metafields?.nodes,
         options: [
           { name: 'Size', values: sizes.length > 0 ? sizes : ['Default'] },
           { name: 'Color', values: colors.length > 0 ? colors : ['Default'] }
@@ -214,6 +217,7 @@ export async function POST(request: Request) {
           taxable: p.processedInfo.variantInfo.taxable,
           weight: p.processedInfo.variantInfo.weight,
           weightUnit: p.processedInfo.variantInfo.weightUnit,
+          metafields: p.processedInfo.variantInfo.metafields,
           image: p.featuredMedia?.preview?.image?.url || null
         })),
         media: baseProduct.media,

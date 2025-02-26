@@ -46,7 +46,7 @@ export const queryShopifyProductBySku = (sku: string) => {
               }
             }
           }
-          metafields(first: 65) {
+          metafields(first: 70) {
             nodes {
               namespace
               key
@@ -84,7 +84,7 @@ export const queryShopifyProductBySku = (sku: string) => {
                     }
                   }
                 }
-                metafields(first: 30) {
+                metafields(first: 43) {
                   nodes {
                     namespace
                     key

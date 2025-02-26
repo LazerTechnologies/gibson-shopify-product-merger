@@ -1,45 +1,10 @@
 "use client";
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import Link from "next/link";
 import Image from "next/image";
 
 /** Types **/
-import type {ProductNode} from "@/lib/types/ShopifyData";
-
-interface ProductsResponse {
-  products: {
-    id: string;
-    title: string;
-    originalTitle: string;
-    vendor: string;
-    productType: string;
-    description: string;
-    options: {
-      name: string;
-      values: string[];
-    }[];
-    variants: {
-      id: string;
-      title: string;
-      size: string;
-      color: string;
-      sku: string | null;
-      price: string | null;
-      compareAtPrice: string | null;
-      inventoryQuantity: number | null;
-      barcode: string | null;
-      requiresShipping: boolean | null;
-      taxable: boolean | null;
-      weight: number | null;
-      weightUnit: string | null;
-      image: string | null;
-    }[];
-    media: ProductNode["media"];
-    featuredMedia: ProductNode["featuredMedia"];
-  }[];
-  originalProducts: ProductNode[];
-  count: number;
-}
+import type {GetMergeProductsResponse} from "@/lib/types";
 
 /**
  * Products To Test With
@@ -64,7 +29,7 @@ interface ProductsResponse {
 export default function Home() {
   const [skus, setSkus] = useState<string[]>(['']);
   const [isLoading, setIsLoading] = useState(false);
-  const [products, setProducts] = useState<ProductsResponse | null>(null);
+  const [products, setProducts] = useState<GetMergeProductsResponse | null>(null);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [editedProductData, setEditedProductData] = useState<{
     title: string;
@@ -109,7 +74,7 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ skus: filteredSkus }),
+        body: JSON.stringify({skus: filteredSkus}),
       });
       
       if (!response.ok) {
@@ -177,6 +142,10 @@ export default function Home() {
       });
     }
   };
+
+  useEffect(() => {
+    console.log("products: ", products);
+  }, [products]);
   
   return (
     <div className="min-h-screen p-8 bg-[#0a0a0e]">
