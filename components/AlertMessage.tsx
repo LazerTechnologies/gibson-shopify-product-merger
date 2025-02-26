@@ -2,9 +2,13 @@ interface AlertMessageProps {
   success: boolean | null;
   successMessage: string;
   errorMessage: string;
-}
+};
 
-export function AlertMessage({success, successMessage, errorMessage}: AlertMessageProps) {
+export function AlertMessage({
+  success, 
+  successMessage, 
+  errorMessage
+}: AlertMessageProps) {
   if (success === null) return null;
   
   return success ? (

@@ -10,7 +10,14 @@ interface SkuInputSectionProps {
   isLoading: boolean;
 };
 
-export function SkuInputSection({skus, updateSku, removeSku, addSkuField, fetchProducts, isLoading}: SkuInputSectionProps) {
+export function SkuInputSection({
+  skus, 
+  updateSku, 
+  removeSku, 
+  addSkuField, 
+  fetchProducts, 
+  isLoading
+}: SkuInputSectionProps) {
   return (
     <div className="bg-[#161620] p-6 rounded-lg shadow-lg border border-gray-800">
       <h2 className="text-xl font-semibold text-gray-100 mb-4">Enter Product SKUs</h2>

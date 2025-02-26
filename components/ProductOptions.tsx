@@ -8,7 +8,12 @@ interface ProductOptionProps {
   handleOptionValueChange: (optionIndex: number, valueIndex: number, value: string) => void;
 };
 
-export function ProductOptions({option, optionIndex, handleOptionNameChange, handleOptionValueChange}: ProductOptionProps) {
+export function ProductOptions({
+  option, 
+  optionIndex, 
+  handleOptionNameChange, 
+  handleOptionValueChange
+}: ProductOptionProps) {
   return (
     <div className="mb-6">
       <div className="flex items-center mb-2">

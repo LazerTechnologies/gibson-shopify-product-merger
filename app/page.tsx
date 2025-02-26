@@ -1,9 +1,10 @@
 "use client";
-import {useState, useEffect, Fragment} from "react";
+import {useState, Fragment} from "react";
 
 /** Components **/
 import {
   Header,
+  AuthModal,
   SkuInputSection,
   MergedProductCard,
   OriginalProductsCard
@@ -41,6 +42,8 @@ export default function Home() {
   const [deleteSuccess, setDeleteSuccess] = useState<boolean | null>(null);
   const [products, setProducts] = useState<GetMergeProductsResponse | null>(null);
   const [editedProductData, setEditedProductData] = useState<Record<string, unknown> | null>(null);
+  const [password, setPassword] = useState<string>('');
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   
   const addSkuField = () => {
     setSkus([...skus, '']);
@@ -222,11 +225,28 @@ export default function Home() {
     }
   };
 
-  useEffect(() => {
-    console.log("products: ", products);
-  }, [products]);
+  const verifyPassword = async () => {
+    try {
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({password}),
+      });
+      
+      if (response.ok) {
+        setIsAuthenticated(true);
+      } else {
+        alert('Incorrect password. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      alert('Failed to verify password. Please try again.');
+    }
+  };
   
-  return (
+  return isAuthenticated ? (
     <div className="min-h-screen p-8 bg-[#0a0a0e]">
       <main className="max-w-4xl mx-auto">
         <Header />
@@ -262,5 +282,11 @@ export default function Home() {
         </div>
       </main>
     </div>
+  ): (
+    <AuthModal
+      password={password}
+      setPassword={setPassword}
+      verifyPassword={verifyPassword}
+    />
   );
 }

@@ -18,7 +18,7 @@ interface MergedProductCardProps {
   handleProductDataChange: (field: 'title' | 'vendor' | 'productType', value: string) => void;
   handleOptionNameChange: (optionIndex: number, value: string) => void;
   handleOptionValueChange: (optionIndex: number, valueIndex: number, value: string) => void;
-}
+};
 
 export function MergedProductCard({
   products, 

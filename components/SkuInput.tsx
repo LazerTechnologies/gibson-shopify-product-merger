@@ -4,9 +4,15 @@ interface SkuInputProps {
   updateSku: (index: number, value: string) => void;
   removeSku: (index: number) => void;
   disableRemove: boolean;
-}
+};
 
-export function SkuInput({sku, index, updateSku, removeSku, disableRemove}: SkuInputProps) {
+export function SkuInput({
+  sku, 
+  index, 
+  updateSku, 
+  removeSku, 
+  disableRemove
+}: SkuInputProps) {
   return (
     <div className="flex items-center gap-2">
       <input

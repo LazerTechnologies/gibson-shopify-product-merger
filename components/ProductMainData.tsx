@@ -6,7 +6,11 @@ interface ProductMainDataProps {
   firstImage: string | undefined;
 };
 
-export function ProductMainData({editedProductData, handleProductDataChange, firstImage}: ProductMainDataProps) {
+export function ProductMainData({
+  editedProductData, 
+  handleProductDataChange, 
+  firstImage
+}: ProductMainDataProps) {
   return (
     <div className="flex gap-4 mb-6">
       <div className="inline-block h-[100px] w-[100px] relative border border-gray-800 rounded-[5px] overflow-hidden p-1">

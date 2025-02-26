@@ -5,9 +5,11 @@ import type {ProductVariantInfo} from "@/lib/types";
 
 interface VariantsTableProps {
   variants: ProductVariantInfo[] | undefined;
-}
+};
 
-export function VariantsTable({variants}: VariantsTableProps) {
+export function VariantsTable({
+  variants
+}: VariantsTableProps) {
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm text-left text-gray-300">

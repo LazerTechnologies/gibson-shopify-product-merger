@@ -1,4 +1,5 @@
 export {AlertMessage} from "./AlertMessage";
+export {AuthModal} from "./AuthModal";
 export {Header} from "./Header";
 export {MergedProductCard} from "./MergedProductCard";
 export {OriginalProductsCard} from "./OriginalProductCard";

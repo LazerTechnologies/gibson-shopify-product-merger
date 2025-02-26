@@ -13,7 +13,12 @@ interface ProductSummaryCardProps {
   isDeleting: boolean;
 };
 
-export function ProductSummaryCard({product, handleDeleteProduct, products, isDeleting}: ProductSummaryCardProps) {
+export function ProductSummaryCard({
+  product, 
+  handleDeleteProduct, 
+  products, 
+  isDeleting
+}: ProductSummaryCardProps) {
   return (
     <div>
       <div className="p-4 bg-[#1a1a25] rounded-lg border border-gray-800">
