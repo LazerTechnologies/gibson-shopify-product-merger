@@ -34,9 +34,7 @@ export default function Home() {
   const [mergeSuccess, setMergeSuccess] = useState<boolean | null>(null);
   const [deleteSuccess, setDeleteSuccess] = useState<boolean | null>(null);
   const [products, setProducts] = useState<GetMergeProductsResponse | null>(null);
-  const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [editedProductData, setEditedProductData] = useState<Record<string, unknown> | null>(null);
-  const [expandedProduct, setExpandedProduct] = useState<string | null>(null);
   
   const addSkuField = () => {
     setSkus([...skus, '']);
@@ -83,7 +81,6 @@ export default function Home() {
       console.log("data: ", data);
       /** Initialize selected products with all product IDs **/
       if (data?.products && data?.products.length > 0) {
-        setSelectedProducts(data?.products.map((product: {id: string}) => product?.id));
         
         /** Initialize edited product data with the first product's information **/
         const firstProduct = data?.products[0];
@@ -177,7 +174,7 @@ export default function Home() {
     }
   };
   
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = async (productIds: string[]) => {
     try {
       setIsDeleting(true);
       setDeleteSuccess(null);
@@ -188,7 +185,7 @@ export default function Home() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          productId
+          productIds
         }),
       });
       
@@ -202,7 +199,7 @@ export default function Home() {
       if (products?.products) {
         const updatedProducts = {
           ...products,
-          products: products.products.filter(product => product.id !== productId),
+          products: products.products.filter((product: {id: string}) => !productIds.includes(product?.id)),
           count: products.count - 1
         };
         setProducts(updatedProducts);
@@ -216,14 +213,6 @@ export default function Home() {
       alert('Failed to delete product. Please try again.');
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const toggleExpandProduct = (productId: string) => {
-    if (expandedProduct === productId) {
-      setExpandedProduct(null);
-    } else {
-      setExpandedProduct(productId);
     }
   };
 
@@ -489,70 +478,58 @@ export default function Home() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <a 
-                                href={`https://${process.env.SHOPIFY_ADMIN_URL}/products/${product.id.split('/').pop()}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="px-3 py-1 bg-blue-900/30 text-blue-300 rounded hover:bg-blue-800/40 transition-colors border border-blue-900"
-                              >
-                                View in Shopify
-                              </a>
                               <button
-                                onClick={() => toggleExpandProduct(product.id)}
-                                className="px-3 py-1 bg-gray-800 text-gray-300 rounded hover:bg-gray-700 transition-colors"
-                              >
-                                {expandedProduct === product.id ? 'Hide Variants' : 'Show Variants'}
-                              </button>
-                              <button
-                                onClick={() => handleDeleteProduct(product.id)}
+                                onClick={() => 
+                                  handleDeleteProduct(products?.originalProducts?.map(
+                                    (product: {id: string}) => product?.id)
+                                  )
+                                }
                                 disabled={isDeleting}
                                 className="px-3 py-1 bg-red-900/30 text-red-300 rounded hover:bg-red-800/40 transition-colors border border-red-900"
                               >
-                                {isDeleting ? 'Deleting...' : 'Delete'}
+                                {isDeleting ? 'Deleting...' : 'Delete All Old Variants'}
                               </button>
                             </div>
                           </div>
                         </div>
                         
                         {/* Expanded Variants Card */}
-                        {expandedProduct === product.id && (
-                          <div className="mt-2 p-4 bg-[#1e1e2a] rounded-lg border border-gray-800">
-                            <h4 className="text-md font-medium text-gray-200 mb-3">All Variants</h4>
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-xs text-left text-gray-300">
-                                <thead className="text-xs text-gray-400 uppercase bg-[#161620]">
-                                  <tr>
-                                    <th scope="col" className="px-3 py-2">Variant</th>
-                                    <th scope="col" className="px-3 py-2">SKU</th>
-                                    <th scope="col" className="px-3 py-2">Price</th>
-                                    <th scope="col" className="px-3 py-2">Inventory</th>
-                                    <th scope="col" className="px-3 py-2">Actions</th>
+                        <div className="mt-2 p-4 bg-[#1e1e2a] rounded-lg border border-gray-800">
+                          <h4 className="text-md font-medium text-gray-200 mb-3">Original Products</h4>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs text-left text-gray-300">
+                              <thead className="text-xs text-gray-400 uppercase bg-[#161620]">
+                                <tr>
+                                  <th scope="col" className="px-3 py-2">Variant</th>
+                                  <th scope="col" className="px-3 py-2">SKU</th>
+                                  <th scope="col" className="px-3 py-2">Price</th>
+                                  <th scope="col" className="px-3 py-2">Inventory</th>
+                                  <th scope="col" className="px-3 py-2">Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {product?.variants?.map((variant, variantIndex) => (
+                                  <tr 
+                                    key={`product-${index}-variant-${variantIndex}`}
+                                    className="border-b border-gray-800"
+                                  >
+                                    <td className="px-3 py-2 font-medium">{variant?.title}</td>
+                                    <td className="px-3 py-2">{variant?.sku}</td>
+                                    <td className="px-3 py-2">${variant?.price}</td>
+                                    <td className="px-3 py-2">{variant?.inventoryQuantity}</td>
+                                    <td className="px-3 py-2">
+                                      <button
+                                        className="px-2 py-1 bg-red-900/30 text-red-300 rounded hover:bg-red-800/40 transition-colors border border-red-900 text-xs"
+                                      >
+                                        Delete Variant
+                                      </button>
+                                    </td>
                                   </tr>
-                                </thead>
-                                <tbody>
-                                  {product?.variants?.map((variant, variantIndex) => (
-                                    <tr 
-                                      key={`product-${index}-variant-${variantIndex}`}
-                                      className="border-b border-gray-800"
-                                    >
-                                      <td className="px-3 py-2 font-medium">{variant?.title}</td>
-                                      <td className="px-3 py-2">{variant?.sku}</td>
-                                      <td className="px-3 py-2">${variant?.price}</td>
-                                      <td className="px-3 py-2">{variant?.inventoryQuantity}</td>
-                                      <td className="px-3 py-2">
-                                        <button
-                                          className="px-2 py-1 bg-red-900/30 text-red-300 rounded hover:bg-red-800/40 transition-colors border border-red-900 text-xs"
-                                        >
-                                          Delete Variant
-                                        </button>
-                                      </td>
-                                    </tr>
-                                  ))}
-                                </tbody>
-                              </table>
-                            </div>
+                                ))}
+                              </tbody>
+                            </table>
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>

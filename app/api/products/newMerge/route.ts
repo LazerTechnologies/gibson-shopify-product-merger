@@ -299,17 +299,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       message: "Product successfully merged",
-      productId: result,
-      title: mergedProductData?.baseTitle,
+      productId: result?.productSetData,
       result
-    }, { status: 200 });
-    
-    return NextResponse.json({
-      message: "Product successfully merged",
-      productId: result?.productSetData?.id,
-      title: mergedProductData?.baseTitle,
-      result
-    }, { status: 200 });
+    }, {status: 200});
     
   } catch (error) {
     console.error("Error merging product: ", error);
