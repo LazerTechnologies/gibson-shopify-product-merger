@@ -102,6 +102,8 @@ export interface ProductVariantInfo {
   weight: number | null;
   weightUnit: string | null;
   image: string | null;
+  imageAlt: string | null;
+  imageUrl: string | null;
   metafields: Metafield[];
 };
 

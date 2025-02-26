@@ -11,12 +11,9 @@ const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2025-01/graphql.json`;
 
-interface FileItem {
-  id: string | null;
-  alt?: string;
-  color?: string;
-  contentType: string;
-}
+type ImageItem = 
+  | {id: string; alt: string | undefined; contentType: string;}
+  | {id: string | null; alt: string | null; color: string; contentType: string;};
 
 interface ProductData {
   baseTitle?: string;
@@ -32,6 +29,12 @@ interface ProductData {
       node: MediaImage;
     }[];
   };
+  colorImages?: {
+    color: string;
+    url: string;
+    imageId: string;
+    altText: string;
+  }[];
 };
 
 const updateImageAltText = async (
@@ -70,13 +73,13 @@ const createProductSet = async (productData: ProductData) => {
   const productHandle = productData?.baseTitle?.replace(/\s+/g, '-');
 
   /** Get unique options and check if any variants have size or color **/
-  const hasAnySize = productData.variants.some((v: ProductVariantInfo) => v.size);
-  const hasAnyColor = productData.variants.some((v: ProductVariantInfo) => v.color);
+  const hasAnySize = productData?.variants?.some((v: ProductVariantInfo) => v.size);
+  const hasAnyColor = productData?.variants?.some((v: ProductVariantInfo) => v.color);
   
   const sizeOptions = hasAnySize ? 
-    [...new Set(productData.variants.map((v: ProductVariantInfo) => v.size))].filter(Boolean) : [];
+    [...new Set(productData?.variants?.map((v: ProductVariantInfo) => v.size))].filter(Boolean) : [];
   const colorOptions = hasAnyColor ? 
-    [...new Set(productData.variants.map((v: ProductVariantInfo) => v.color))].filter(Boolean) : [];
+    [...new Set(productData?.variants?.map((v: ProductVariantInfo) => v.color))].filter(Boolean) : [];
 
   /** Get all unique images and update their alt text **/
   const mediaFromProduct = productData?.media?.edges?.map((media) => ({
@@ -89,22 +92,27 @@ const createProductSet = async (productData: ProductData) => {
     ?.filter((variant: ProductVariantInfo) => variant?.image)
     ?.map((variant: ProductVariantInfo) => ({
       id: variant?.image,
-      alt: "",
+      alt: variant?.imageAlt,
       color: variant?.color,
       contentType: "IMAGE"
     })) || [];
 
   /** Combine and deduplicate images based on id **/
   const allFiles = [...mediaFromProduct, ...variantImages]
-    .filter((file: FileItem, index: number, self: FileItem[]) => 
-      index === self.findIndex((f: FileItem) => f.id === file.id)
+    .filter((file: ImageItem, index: number, self: ImageItem[]) => 
+      index === self.findIndex((f: ImageItem) => f.id === file.id)
     );
 
   /** Update alt text for all unique images **/
-  await Promise.all(allFiles.map(async (file: FileItem) => {
-    const matchingVariant = variantImages.find((v: FileItem) => v.id === file.id);
+  await Promise.all(allFiles.map(async (file: ImageItem) => {
+    /** Find matching variant with color information **/
+    const matchingVariant = variantImages.find((v) => v.id === file.id);
     if (matchingVariant?.color) {
-      await updateImageAltText(file?.id, matchingVariant.color, file.alt || '');
+      await updateImageAltText(
+        file.id, 
+        matchingVariant.color,
+        (matchingVariant?.alt || ''),
+      );
     }
   }));
 
@@ -121,17 +129,32 @@ const createProductSet = async (productData: ProductData) => {
   const productSetInput = {
     synchronous: true,
     productSet: {
-      title: productData?.baseTitle,
+      title: productData?.title,
       descriptionHtml: productData?.description,
       handle: productHandle,
       productType: productData?.productType,
       status: "DRAFT",
       vendor: productData?.vendor,
-      files: allFiles.length > 0 ? allFiles.map((file: FileItem) => ({
-        id: file.id,
-        alt: file.alt,
-        contentType: "IMAGE"
-      })) : null,
+      files: productData?.colorImages ? 
+        productData?.colorImages.length > 0 ? 
+          productData?.colorImages.map((colorImage: {
+            color: string;
+            url: string;
+            imageId: string;
+            altText: string;
+          }) => {
+        /** Update alt text with color information if available **/
+        let altText = colorImage?.altText || '';
+        if (colorImage?.color) {
+          altText = `${colorImage.color} | ${altText}`;
+        };
+        
+        return {
+          id: colorImage?.imageId,
+          alt: altText,
+          contentType: "IMAGE"
+        };
+      }) : null : null,
       productOptions: [
         ...(sizeOptions.length > 0 ? [{
           name: "Size",
@@ -186,7 +209,7 @@ const createProductSet = async (productData: ProductData) => {
               return {
                 file: updatedVariant?.image ? {
                   id: updatedVariant?.image,
-                  alt: `${updatedVariant?.color || 'Default'} | `,
+                  alt: `${updatedVariant?.color || 'Default'} | ${updatedVariant?.imageAlt || ''}`,
                   contentType: "IMAGE",
                 } : null,
                 barcode: updatedVariant?.barcode ?? null,
@@ -252,6 +275,9 @@ const createProductSet = async (productData: ProductData) => {
   if (productCreateData?.data?.productSet?.userErrors?.length > 0) {
     console.error("Product Creation Errors:", productCreateData.data.productSet.userErrors);
     throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.data.productSet.userErrors));
+  } else if (productCreateData?.errors?.length > 0) {
+    console.error("Product Creation Errors:", productCreateData.errors);
+    throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.errors));
   };
 
   return {
@@ -263,18 +289,25 @@ const createProductSet = async (productData: ProductData) => {
 
 export async function POST(request: Request) {
   try {
-    const {productData} = await request.json();
+    const {mergedProductData} = await request.json();
     
-    if (!productData) {
+    if (!mergedProductData) {
       return NextResponse.json({ error: "No product data provided" }, { status: 400 });
     }
     
-    const result = await createProductSet(productData);
+    const result = await createProductSet(mergedProductData);
+
+    return NextResponse.json({
+      message: "Product successfully merged",
+      productId: result,
+      title: mergedProductData?.baseTitle,
+      result
+    }, { status: 200 });
     
     return NextResponse.json({
       message: "Product successfully merged",
       productId: result?.productSetData?.id,
-      title: productData?.baseTitle,
+      title: mergedProductData?.baseTitle,
       result
     }, { status: 200 });
     

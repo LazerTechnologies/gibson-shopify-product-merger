@@ -191,6 +191,21 @@ export async function POST(request: Request) {
       /** Get base product info from first product **/
       const baseProduct = products[0];
       
+      /** Create a map of color to featured image ID for unique color representation */
+      const colorToImageMap: Record<string, { id: string, altText: string, url: string; }> = {};
+      
+      /** Populate the color to image map with the first image found for each color */
+      products.forEach(product => {
+        const color = product.processedInfo.color || 'Default';
+        if (!colorToImageMap[color] && product.featuredMedia?.id) {
+          colorToImageMap[color] = {
+            id: product?.featuredMedia?.id ?? "",
+            url: product?.featuredMedia?.preview?.image?.url ?? "",
+            altText: product?.featuredMedia?.preview?.image?.altText || ''
+          };
+        }
+      });
+      
       return {
         id: baseProduct.id,
         title,
@@ -203,25 +218,38 @@ export async function POST(request: Request) {
           { name: 'Size', values: sizes.length > 0 ? sizes : ['Default'] },
           { name: 'Color', values: colors.length > 0 ? colors : ['Default'] }
         ],
-        variants: products.map(p => ({
-          id: p.id,
-          title: p.title,
-          size: p.processedInfo.size || 'Default',
-          color: p.processedInfo.color || 'Default',
-          sku: p.processedInfo.variantInfo.sku,
-          price: p.processedInfo.variantInfo.price,
-          compareAtPrice: p.processedInfo.variantInfo.compareAtPrice,
-          inventoryQuantity: p.processedInfo.variantInfo.inventoryQuantity,
-          barcode: p.processedInfo.variantInfo.barcode,
-          requiresShipping: p.processedInfo.variantInfo.requiresShipping,
-          taxable: p.processedInfo.variantInfo.taxable,
-          weight: p.processedInfo.variantInfo.weight,
-          weightUnit: p.processedInfo.variantInfo.weightUnit,
-          metafields: p.processedInfo.variantInfo.metafields,
-          image: p.featuredMedia?.preview?.image?.url || null
-        })),
+        variants: products.map(p => {
+          const variantColor = p.processedInfo.color || 'Default';
+          const colorImage = colorToImageMap[variantColor];
+          
+          return {
+            id: p.id,
+            title: p.title,
+            size: p.processedInfo.size || 'Default',
+            color: variantColor,
+            sku: p.processedInfo.variantInfo.sku,
+            price: p.processedInfo.variantInfo.price,
+            compareAtPrice: p.processedInfo.variantInfo.compareAtPrice,
+            inventoryQuantity: p.processedInfo.variantInfo.inventoryQuantity,
+            barcode: p.processedInfo.variantInfo.barcode,
+            requiresShipping: p.processedInfo.variantInfo.requiresShipping,
+            taxable: p.processedInfo.variantInfo.taxable,
+            weight: p.processedInfo.variantInfo.weight,
+            weightUnit: p.processedInfo.variantInfo.weightUnit,
+            metafields: p.processedInfo.variantInfo.metafields,
+            image: colorImage?.id || null,
+            imageUrl: p?.featuredMedia?.preview?.image?.url || null,
+            imageAlt: colorImage?.altText || '',
+          };
+        }),
         media: baseProduct.media,
-        featuredMedia: baseProduct.featuredMedia
+        featuredMedia: baseProduct.featuredMedia,
+        colorImages: Object.entries(colorToImageMap).map(([color, image]) => ({
+          color,
+          url: image?.url ?? "",
+          imageId: image?.id,
+          altText: image?.altText
+        }))
       };
     });
 
