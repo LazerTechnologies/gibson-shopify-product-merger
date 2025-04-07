@@ -2,10 +2,12 @@
 import {useState, useEffect} from "react";
 
 /** Types **/
-import type {ProductNode, LinkedProductGroup, CombinedProduct} from "@/lib/types/ShopifyData";
+import type {ProductNode, LinkedProductGroup, CombinedProduct, NonMergedMerchProductNode} from "@/lib/types/ShopifyData";
 
 interface ProductsResponse {
   originalProducts: ProductNode[];
+  products: NonMergedMerchProductNode[];
+  remainingProducts: NonMergedMerchProductNode[];
   combinedProducts: CombinedProduct[];
   linkedGroups: LinkedProductGroup[];
 }
@@ -50,7 +52,7 @@ export default function MergeProducts() {
     console.log("Updating products...");
     setIsLoading(true);
 
-    const combinedProducts = products?.combinedProducts?.slice(0, 1);
+    const combinedProducts = products?.combinedProducts;
     
     try {
       const response = await fetch("/api/products/merge", {
@@ -105,6 +107,15 @@ export default function MergeProducts() {
             </button>
           )}
         </div>
+        {products && (
+          <>
+            {products?.remainingProducts?.map((product) => (
+              <div key={product?.id}>
+                <h2>{product?.title}</h2>
+              </div>
+            ))}
+          </>
+        )}
         {products && (
           <div className="space-y-8">
             <h2 className="text-2xl font-semibold text-white">Combined Products ({products?.combinedProducts?.length})</h2>

@@ -14,6 +14,181 @@ const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2025-01/graphql.json`;
 const CACHE_FILE_PATH = path.join(process.cwd(), 'data', 'all-non-merged-merch-products.json');
 const CACHE_DURATION = 1000 * 60 * 60 * 24; /** 1 day in milliseconds **/
 
+/** Clean up remaining products and attempt additional merging **/
+const cleanupRemainingProducts = (remainingProducts: NonMergedMerchProductNode[]) => {
+
+  /** Try to group remaining products by similar titles **/
+  const remainingGroups = new Map<string, NonMergedMerchProductNode[]>();
+  
+  remainingProducts.forEach(product => {
+    /** Check linked products metafield first **/
+    const linkedProductsMetafield = product?.metafields?.nodes.find(meta => 
+      meta?.key === "linked_products" && 
+      meta?.type === "metaobject_reference"
+    );
+
+    if (linkedProductsMetafield?.reference) {
+      const linkedProductsField = linkedProductsMetafield?.reference?.fields?.find(
+        field => field?.key === "linked_product_group"
+      );
+
+      if (linkedProductsField?.value) {
+        try {
+          const linkedIds = JSON.parse(linkedProductsField?.value || '') as string[];
+
+          /** Skip if less than 2 linked products **/
+          if (linkedIds.length > 1) {
+            return;
+          }
+        } catch (error) {
+          console.error(`Error parsing linked products:`, error);
+        }
+      }
+    }
+
+    const {cleanedTitle} = processMergeProductTitle(
+      product?.title || '',
+      product?.variants?.edges?.[0]?.node?.sku || ''
+    );
+
+    /** Try to find existing groups with similar titles **/
+    let foundMatch = false;
+    for (const [existingTitle, group] of remainingGroups.entries()) {
+      /** Check if titles are similar (you can adjust the similarity threshold) **/
+      if (
+        existingTitle?.toLowerCase()?.includes(cleanedTitle?.toLowerCase()) || 
+        cleanedTitle?.toLowerCase()?.includes(existingTitle?.toLowerCase())
+      ) {
+        group.push(product);
+        foundMatch = true;
+        break;
+      };
+    };
+
+    if (!foundMatch) {
+      remainingGroups.set(cleanedTitle, [product]);
+    }
+  });
+
+  /** Filter out groups with only single products before processing **/
+  for (const [title, group] of remainingGroups?.entries()) {
+    if (group?.length <= 1) {
+      remainingGroups?.delete(title);
+    };
+  };
+
+  /** Create new combined products from remaining groups **/
+  const newCombinedProducts = Array.from(remainingGroups?.entries() || [])
+    .map(([cleanedTitle, groupedProducts]) => {
+      const firstProduct = groupedProducts[0];
+      
+      /** Track unique featured images by their base filename and alt text **/
+      const uniqueImages = new Map<string, {
+        id: string,
+        url: string,
+        alt?: string
+      }>();
+
+      /** Process featured images to build unique image map **/
+      groupedProducts?.forEach(product => {
+        if (product?.featuredMedia?.preview?.image?.url) {
+          const imageUrl = product?.featuredMedia?.preview?.image?.url;
+          const alt = product?.featuredMedia?.preview?.image?.altText;
+
+          /** Also store by alt text if it exists **/
+          if (alt && !uniqueImages.has(alt)) {
+            uniqueImages.set(alt, {
+              id: product?.featuredMedia?.id,
+              url: imageUrl,
+              alt: alt,
+            });
+          }
+        }
+      });
+
+      return {
+        productData: {
+          baseTitle: cleanedTitle,
+          title: firstProduct?.title || '',
+          vendor: firstProduct?.vendor || '',
+          createdAt: firstProduct?.createdAt || '',
+          updatedAt: firstProduct?.updatedAt || '',
+          publishedAt: firstProduct?.publishedAt || '',
+          productType: firstProduct?.productType || '',
+          status: firstProduct?.status || '',
+          description: firstProduct?.description || '',
+          tags: firstProduct?.tags || [],
+          metafields: firstProduct?.metafields || [],
+          seo: {
+            title: firstProduct?.seo?.title || '',
+            description: firstProduct?.seo?.description || '',
+          },
+          media: firstProduct?.media || [],
+          featuredMedia: firstProduct?.featuredMedia || null,
+          variants: groupedProducts.map((product) => {
+            const productVariant = product?.variants?.edges?.[0]?.node;
+            const {size, color} = processMergeProductTitle(product?.title || '', productVariant?.sku);
+
+            /** Try to find matching featured image for this variant **/
+            let variantImage = {
+              id: product?.featuredMedia?.id,
+              altText: product?.featuredMedia?.preview?.image?.altText
+            };
+
+            if (product?.featuredMedia?.preview?.image?.url) {
+              /** If no match by filename, try matching by alt text **/
+              const existingImage = uniqueImages.get(product?.featuredMedia?.preview?.image?.altText);
+              
+              if (existingImage) {
+                variantImage = {
+                  id: existingImage?.id,
+                  altText: existingImage?.alt || ''
+                };
+              };
+            };
+
+            return {
+              size: size || '',
+              color: color || '',
+              productTitle: cleanedTitle,
+              title: product?.title || '',
+              price: productVariant?.price || '',
+              compareAtPrice: productVariant?.compareAtPrice || '',
+              sku: productVariant?.sku || '',
+              barcode: productVariant?.barcode || '',
+              metafields: productVariant?.metafields || [],
+              requiresShipping: productVariant?.requiresShipping || true,
+              taxable: productVariant?.taxable ?? true,
+              inventoryQuantity: productVariant?.inventoryQuantity || 0,
+              weight: productVariant?.measurement?.weight?.value || 0,
+              weightUnit: productVariant?.measurement?.weight?.unit || '',
+              countryOfOrigin: productVariant?.inventoryItem?.countryCodeOfOrigin || '',
+              harmonizedSystemCode: productVariant?.inventoryItem?.harmonizedSystemCode || '',
+              featuredImage: variantImage,
+              oldProductId: product?.id,
+            };
+          }),
+        }
+      };
+    });
+
+  /** Get final unmatched products - only those that weren't grouped **/
+  const finalUnmatched = remainingProducts?.filter(product => {
+    const sku = product?.variants?.edges?.[0]?.node?.sku;
+    const {cleanedTitle} = processMergeProductTitle(product?.title || '', sku || '');
+    const group = remainingGroups?.get(cleanedTitle);
+    return !group || group?.length <= 1;
+  });
+
+  console.log(`\nSuccessfully created ${newCombinedProducts.length} new groups`);
+  console.log(`${finalUnmatched.length} products remain unmatched:`);
+
+  return {
+    newCombinedProducts: newCombinedProducts,
+    finalUnmatched: finalUnmatched,
+  };
+};
+
 const combineProducts = (products: NonMergedMerchProductNode[]) => {
 
   /** Group products by their cleaned title **/
@@ -234,12 +409,12 @@ async function getAllProducts() {
     }
 
     const {combinedProducts, remainingProducts} = combineProducts(allProducts);
+    const {newCombinedProducts, finalUnmatched} = cleanupRemainingProducts(remainingProducts);
 
     return {
       products: allProducts,
-      combinedProducts: combinedProducts,
-      remainingProducts: remainingProducts,
-      fromCache: useCache
+      combinedProducts: [...combinedProducts, ...newCombinedProducts],
+      remainingProducts: finalUnmatched,
     };
   } catch (error) {
     console.error("Error in getAllProducts:", error);

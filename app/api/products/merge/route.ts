@@ -351,7 +351,12 @@ export async function POST(request: Request) {
   try {
     const {products}: {products: CombinedMerchProduct[]} = await request.json();
     
+    let mergeIdx: number = 0;
+    
     for (const product of products) {
+      console.log(`Processing Product ${mergeIdx + 1} of ${products?.length}`);
+      mergeIdx++;
+
       try {
         const result = await createProductSet(product);
         
@@ -389,7 +394,7 @@ export async function POST(request: Request) {
       } catch (error) {
         productResults.push({
           title: product?.productData?.baseTitle,
-          error: error instanceof Error ? error.message : String(error),
+          error: error instanceof Error ? error?.message : String(error),
           deletedProducts: null
         });
       };
