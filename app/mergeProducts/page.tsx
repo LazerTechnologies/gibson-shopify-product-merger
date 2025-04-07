@@ -50,7 +50,7 @@ export default function MergeProducts() {
     console.log("Updating products...");
     setIsLoading(true);
 
-    const combinedProducts = products?.combinedProducts;
+    const combinedProducts = products?.combinedProducts?.slice(0, 1);
     
     try {
       const response = await fetch("/api/products/merge", {

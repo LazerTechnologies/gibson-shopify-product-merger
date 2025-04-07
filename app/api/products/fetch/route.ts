@@ -177,6 +177,7 @@ const combineProducts = (products: NonMergedMerchProductNode[]) => {
             weightUnit: productVariant.measurement?.weight?.unit,
             countryOfOrigin: productVariant.inventoryItem?.countryCodeOfOrigin,
             harmonizedSystemCode: productVariant.inventoryItem?.harmonizedSystemCode,
+            oldProductId: product?.id,
           };
         }),
       }

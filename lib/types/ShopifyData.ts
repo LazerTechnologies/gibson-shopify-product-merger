@@ -127,6 +127,69 @@ export interface CombinedProduct {
   };
 };
 
+export interface CombinedMerchProduct {
+  productData: {
+    baseTitle: string;
+    title: string;
+    vendor: string;
+    createdAt: string;
+    updatedAt: string;
+    publishedAt: string;
+    productType: string;
+    status: string;
+    description: string;
+    tags: string[];
+    metafields: {
+      nodes: Metafield[];
+    };
+    seo: {
+      title: string;
+      description: string;
+    };
+    media: {
+      edges: {
+        node: MediaImage;
+      }[];
+    };
+    featuredMedia?: {
+      id: string;
+      preview: {
+        image: {
+          url: string;
+          altText: string;
+        };
+      };
+    };
+    variants: CombinedMerchProductVariant[] | [];
+  };
+};
+
+export interface CombinedMerchProductVariant {
+  size: string;
+  color: string;
+  productTitle: string;
+  title: string;
+  price: string;
+  compareAtPrice: string | null;
+  featuredImage: {
+    id: string | null;
+    altText: string | null;
+  };
+  sku: string;
+  barcode: string | null;
+  metafields: {
+    nodes: Metafield[];
+  };
+  weight: number | null;
+  weightUnit: string | null;
+  countryOfOrigin: string | null;
+  harmonizedSystemCode: string | null;
+  requiresShipping: boolean;
+  taxable: boolean;
+  inventoryQuantity: number;
+  oldProductId?: string;
+};
+
 export interface CombinedProductVariant {
   size: string;
   color: string;
@@ -148,6 +211,7 @@ export interface CombinedProductVariant {
   requiresShipping: boolean;
   taxable: boolean;
   inventoryQuantity: number;
+  oldProductId?: string;
 };
 
 export interface ProductOption {

@@ -1,25 +1,285 @@
 {
-  "successfulUpdates": [],
-  "failedUpdates": [
+  "productResults": [
     {
-      "title": "Lifestyle Farewell Tour x Gibson Crewneck Carbon",
-      "error": "Product Creation Failed: [{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"files\"],\"message\":\"Media ids [29158437093555] do not exist\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"1\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"2\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"3\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"4\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"}]"
-    },
-    {
-      "title": "Lifestyle Gibson Garage Shop Tee",
-      "error": "Product Creation Failed: [{\"code\":\"INVALID_METAFIELD\",\"field\":[\"input\",\"variants\",\"0\",\"metafields\",\"16\",\"value\"],\"message\":\"Value requires that you have a metafield definition with the key: color.\"},{\"code\":\"INVALID_METAFIELD\",\"field\":[\"input\",\"variants\",\"1\",\"metafields\",\"16\",\"value\"],\"message\":\"Value requires that you have a metafield definition with the key: color.\"},{\"code\":\"INVALID_METAFIELD\",\"field\":[\"input\",\"variants\",\"2\",\"metafields\",\"16\",\"value\"],\"message\":\"Value requires that you have a metafield definition with the key: color.\"},{\"code\":\"INVALID_METAFIELD\",\"field\":[\"input\",\"variants\",\"3\",\"metafields\",\"16\",\"value\"],\"message\":\"Value requires that you have a metafield definition with the key: color.\"},{\"code\":\"INVALID_METAFIELD\",\"field\":[\"input\",\"variants\",\"4\",\"metafields\",\"16\",\"value\"],\"message\":\"Value requires that you have a metafield definition with the key: color.\"},{\"code\":\"INVALID_METAFIELD\",\"field\":[\"input\",\"variants\",\"5\",\"metafields\",\"16\",\"value\"],\"message\":\"Value requires that you have a metafield definition with the key: color.\"}]"
-    },
-    {
-      "title": "Lifestyle Farewell Tour x Gibson Gold Logo Tee",
-      "error": "Product Creation Failed: [{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"files\"],\"message\":\"Media ids [29158436044979, 29158436176051, 29158436602035] do not exist\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"1\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"2\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"3\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"4\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"5\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"6\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"7\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"8\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"9\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"}]"
-    },
-    {
-      "title": "Lifestyle Farewell Tour x Gibson Clean Longsleeve Tee",
-      "error": "Product Creation Failed: [{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"files\"],\"message\":\"Media ids [29158436700339, 29158436896947, 29158436798643] do not exist\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"1\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"2\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"3\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"4\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"5\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"6\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"7\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"8\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"9\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"}]"
-    },
-    {
-      "title": "Lifestyle Farewell Tour x Gibson Crewneck",
-      "error": "Product Creation Failed: [{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"files\"],\"message\":\"Media ids [29158439452851] do not exist\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"1\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"2\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"3\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"},{\"code\":\"INVALID_INPUT\",\"field\":[\"input\",\"variants\",\"4\",\"file\",\"id\"],\"message\":\"Media id missing from the product\"}]"
+      "title": "Gibson Hoodie Exclusive",
+      "input": {
+        "synchronous": true,
+        "productSet": {
+          "title": "Gibson Hoodie Exclusive",
+          "descriptionHtml": "Classic hoodie featuring the historic Gibson logo found on all Gibson instruments since the late 1940s. 52% Cotton, 48% Polyester Unisex Sizing Machine wash cold with like colors. See shirt instructions for details.",
+          "handle": "Gibson-Hoodie-Exclusive",
+          "productType": "Sweatshirt",
+          "status": "DRAFT",
+          "vendor": "Gibson",
+          "files": [
+            {
+              "id": "gid://shopify/MediaImage/29447245758643",
+              "alt": "GA-HOOD-BLK_2000px.png",
+              "contentType": "IMAGE"
+            },
+            {
+              "id": "gid://shopify/MediaImage/29051208433843",
+              "alt": "GA-HOOD-BLK 2000px",
+              "contentType": "IMAGE"
+            }
+          ],
+          "productOptions": [
+            {
+              "name": "Size",
+              "values": [
+                {
+                  "name": "Extra Large"
+                },
+                {
+                  "name": "Small"
+                },
+                {
+                  "name": "Medium"
+                },
+                {
+                  "name": "3XL"
+                },
+                {
+                  "name": "Large"
+                },
+                {
+                  "name": "2XL"
+                }
+              ]
+            },
+            {
+              "name": "Color",
+              "values": [
+                {
+                  "name": "Black"
+                }
+              ]
+            }
+          ],
+          "tags": [
+            "ACTIVE",
+            "garage-available: nashville",
+            "inventory-unavailable: mainfreight",
+            "no_body_image_shot",
+            "non_merged_merch_product",
+            "primary_collection: Clothing & Apparel",
+            "new_merch_product"
+          ],
+          "metafields": null,
+          "seo": {
+            "title": "Gibson Hoodie (Black), Exclusive, Extra Large",
+            "description": "Classic hoodie featuring the historic Gibson logo found on all Gibson instruments since the late 1940s. 52% Cotton, 48% Polyester Unisex Sizing Machine wash cold with like colors. See shirt instructions for details."
+          },
+          "variants": [
+            {
+              "file": {
+                "id": "gid://shopify/MediaImage/29447245758643",
+                "alt": "Black | GA-HOOD-BLK_2000px.png",
+                "contentType": "IMAGE"
+              },
+              "barcode": "711106151403",
+              "compareAtPrice": "59.00",
+              "price": "59.00",
+              "taxable": true,
+              "inventoryItem": {
+                "sku": "GA-HOOD-BLK-XL",
+                "requiresShipping": false,
+                "countryCodeOfOrigin": "HN",
+                "harmonizedSystemCode": "6110202045",
+                "measurement": {
+                  "weight": {
+                    "unit": "POUNDS",
+                    "value": 0
+                  }
+                }
+              },
+              "metafields": null,
+              "optionValues": [
+                {
+                  "optionName": "Size",
+                  "name": "Extra Large"
+                },
+                {
+                  "optionName": "Color",
+                  "name": "Black"
+                }
+              ]
+            },
+            {
+              "file": {
+                "id": "gid://shopify/MediaImage/29051208433843",
+                "alt": "Black | GA-HOOD-BLK 2000px",
+                "contentType": "IMAGE"
+              },
+              "barcode": "711106151373",
+              "compareAtPrice": "59.00",
+              "price": "59.00",
+              "taxable": true,
+              "inventoryItem": {
+                "sku": "GA-HOOD-BLK-SM",
+                "requiresShipping": false,
+                "countryCodeOfOrigin": "HN",
+                "harmonizedSystemCode": "6110202045",
+                "measurement": {
+                  "weight": {
+                    "unit": "POUNDS",
+                    "value": 0
+                  }
+                }
+              },
+              "metafields": null,
+              "optionValues": [
+                {
+                  "optionName": "Size",
+                  "name": "Small"
+                },
+                {
+                  "optionName": "Color",
+                  "name": "Black"
+                }
+              ]
+            },
+            {
+              "file": {
+                "id": "gid://shopify/MediaImage/29447245758643",
+                "alt": "Black | GA-HOOD-BLK_2000px.png",
+                "contentType": "IMAGE"
+              },
+              "barcode": "711106151380",
+              "compareAtPrice": "59.00",
+              "price": "59.00",
+              "taxable": true,
+              "inventoryItem": {
+                "sku": "GA-HOOD-BLK-MD",
+                "requiresShipping": false,
+                "countryCodeOfOrigin": "HN",
+                "harmonizedSystemCode": "6110202045",
+                "measurement": {
+                  "weight": {
+                    "unit": "POUNDS",
+                    "value": 0
+                  }
+                }
+              },
+              "metafields": null,
+              "optionValues": [
+                {
+                  "optionName": "Size",
+                  "name": "Medium"
+                },
+                {
+                  "optionName": "Color",
+                  "name": "Black"
+                }
+              ]
+            },
+            {
+              "file": {
+                "id": "gid://shopify/MediaImage/29447245758643",
+                "alt": "Black | GA-HOOD-BLK_2000px.png",
+                "contentType": "IMAGE"
+              },
+              "barcode": "711106151427",
+              "compareAtPrice": "59.00",
+              "price": "59.00",
+              "taxable": true,
+              "inventoryItem": {
+                "sku": "GA-HOOD-BLK-3X",
+                "requiresShipping": false,
+                "countryCodeOfOrigin": "HN",
+                "harmonizedSystemCode": "6110202045",
+                "measurement": {
+                  "weight": {
+                    "unit": "POUNDS",
+                    "value": 0
+                  }
+                }
+              },
+              "metafields": null,
+              "optionValues": [
+                {
+                  "optionName": "Size",
+                  "name": "3XL"
+                },
+                {
+                  "optionName": "Color",
+                  "name": "Black"
+                }
+              ]
+            },
+            {
+              "file": {
+                "id": "gid://shopify/MediaImage/29447245758643",
+                "alt": "Black | GA-HOOD-BLK_2000px.png",
+                "contentType": "IMAGE"
+              },
+              "barcode": "711106151397",
+              "compareAtPrice": "59.00",
+              "price": "59.00",
+              "taxable": true,
+              "inventoryItem": {
+                "sku": "GA-HOOD-BLK-LG",
+                "requiresShipping": false,
+                "countryCodeOfOrigin": "HN",
+                "harmonizedSystemCode": "6110202045",
+                "measurement": {
+                  "weight": {
+                    "unit": "POUNDS",
+                    "value": 0
+                  }
+                }
+              },
+              "metafields": null,
+              "optionValues": [
+                {
+                  "optionName": "Size",
+                  "name": "Large"
+                },
+                {
+                  "optionName": "Color",
+                  "name": "Black"
+                }
+              ]
+            },
+            {
+              "file": {
+                "id": "gid://shopify/MediaImage/29447245758643",
+                "alt": "Black | GA-HOOD-BLK_2000px.png",
+                "contentType": "IMAGE"
+              },
+              "barcode": "711106151410",
+              "compareAtPrice": "59.00",
+              "price": "59.00",
+              "taxable": true,
+              "inventoryItem": {
+                "sku": "GA-HOOD-BLK-2X",
+                "requiresShipping": false,
+                "countryCodeOfOrigin": "HN",
+                "harmonizedSystemCode": "6110202045",
+                "measurement": {
+                  "weight": {
+                    "unit": "POUNDS",
+                    "value": 0
+                  }
+                }
+              },
+              "metafields": null,
+              "optionValues": [
+                {
+                  "optionName": "Size",
+                  "name": "2XL"
+                },
+                {
+                  "optionName": "Color",
+                  "name": "Black"
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "errors": "Internal error. Looks like something went wrong on our end.\nRequest ID: c9c5c9e3-a30e-4c82-b50b-04a03192157d-1744046116 (include this in support requests).",
+      "deletedProducts": null
     }
   ]
 }

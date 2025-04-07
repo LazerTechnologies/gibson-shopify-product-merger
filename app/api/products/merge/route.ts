@@ -3,15 +3,69 @@ import fs from "fs/promises";
 import path from "path";
 
 /** Types **/
-import type {CombinedProduct, Metafield} from "@/lib/types/ShopifyData";
+import type {CombinedMerchProduct, Metafield} from "@/lib/types/ShopifyData";
 
 /** Queries **/
-import {mutationProductSet, mutationFileUpdate} from "@/queries";
+import {mutationProductSet, mutationFileUpdate, mutationProductDelete} from "@/queries";
 
 const SHOP_NAME = process.env.SHOPIFY_SHOP_NAME;
 const ACCESS_TOKEN = process.env.SHOPIFY_ACCESS_TOKEN;
 const GRAPHQL_ENDPOINT = `https://${SHOP_NAME}/admin/api/2025-01/graphql.json`;
 const UPDATES_FILE_PATH = path.join(process.cwd(), "data", "product-updates.json");
+
+const deleteNonMergedMerchProducts = async (productIds: string[] | null) => {
+
+  if (!productIds || !productIds?.length) return null;
+
+  const deletedProducts = await Promise.all(productIds.map(async (productId) => {
+    const response = await fetch(GRAPHQL_ENDPOINT, {
+      method: "POST",
+      headers: {
+        "X-Shopify-Access-Token": ACCESS_TOKEN!,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        query: mutationProductDelete(productId),
+      }),
+    });
+
+    const deleteResult = await response?.json();
+
+    const deletedProduct = deleteResult?.data?.productDelete;
+
+    if (deletedProduct?.userErrors?.length > 0) {
+      const mutationErrors = deletedProduct?.userErrors?.map((error: {message: string}) => 
+        error?.message
+      )?.join(', ');
+      console.error("Error deleting product: ", mutationErrors);
+
+      return {
+        success: false,
+        productId: productId,
+        errors: mutationErrors,
+      };
+    } else if (deletedProduct?.errors?.length > 0) {
+      const errorMessages = deletedProduct?.errors?.map((error: {message: string}) => 
+        error?.message
+      )?.join(', ');
+      console.error("Error deleting product: ", errorMessages);
+      
+      return {
+        success: false,
+        productId: productId,
+        errors: errorMessages,
+      };
+    }
+
+    return {
+      success: true,
+      productId: productId,
+      errors: null,
+    };
+  }));
+
+  return deletedProducts;
+};
 
 const updateImageAltText = async (
   mediaId: string | null, 
@@ -44,7 +98,7 @@ const updateImageAltText = async (
   return data;
 };
 
-const createProductSet = async (product: CombinedProduct) => {
+const createProductSet = async (product: CombinedMerchProduct) => {
   /** Get product handle **/
   const productHandle = product?.productData?.baseTitle?.replace(/\s+/g, '-');
 
@@ -67,8 +121,6 @@ const createProductSet = async (product: CombinedProduct) => {
       acc[color] = (acc[color] || 0) + 1;
       return acc;
     }, {});
-
-    console.log('Variant distribution by color:', variantCountByColor);
 
     /** Find color with minimum variants and its corresponding variant **/
     const minColor = Object.entries(variantCountByColor)
@@ -145,8 +197,8 @@ const createProductSet = async (product: CombinedProduct) => {
         }] : [])
       ],
       tags: updatedTags,
-      metafields: product?.productData?.metafields?.length > 0 ? 
-        product?.productData?.metafields?.map((metafield: Metafield) => ({
+      metafields: product?.productData?.metafields?.nodes?.length > 0 ? 
+        product?.productData?.metafields?.nodes?.map((metafield: Metafield) => ({
           namespace: metafield?.namespace,
           key: metafield?.key,
           value: metafield?.value,
@@ -167,26 +219,25 @@ const createProductSet = async (product: CombinedProduct) => {
               
               if (hasAnySize && !updatedVariant?.size) {
                 const variantsWithSameColor = product.productData.variants
-                  .filter(v => v.color === updatedVariant.color && v.size);
-                if (variantsWithSameColor.length > 0) {
-                  updatedVariant.size = variantsWithSameColor[0].size;
+                  .filter(v => v?.color === updatedVariant?.color && v?.size);
+                if (variantsWithSameColor?.length > 0) {
+                  updatedVariant.size = variantsWithSameColor[0]?.size;
                 } else {
                   return null;
                 }
               }
               
-              if (hasAnyColor && (!updatedVariant?.color || updatedVariant.color === 'No Color') && variantWithLeastOccurrences) {
-                updatedVariant.color = variantWithLeastOccurrences.color;
-                if (!updatedVariant.featuredImage) {
-                  updatedVariant.featuredImage = variantWithLeastOccurrences.featuredImage;
-                }
-              }
+              if (hasAnyColor && (!updatedVariant?.color || updatedVariant?.color === 'No Color') && variantWithLeastOccurrences) {
+                updatedVariant.color = variantWithLeastOccurrences?.color;
+
+                if (!updatedVariant?.featuredImage) {
+                  updatedVariant.featuredImage = variantWithLeastOccurrences?.featuredImage;
+                };
+              };
 
               /** Create unique key for option combination **/
-              const comboKey = `${updatedVariant.size || ''}-${updatedVariant.color || ''}`;
-              if (processedCombos.has(comboKey)) {
-                return null; /** Skip duplicate combinations **/
-              }
+              const comboKey = `${updatedVariant?.size || ''}-${updatedVariant?.color || ''}`;
+              if (processedCombos.has(comboKey)) return null; /** Skip duplicate combinations **/
               processedCombos.add(comboKey);
               
               return {
@@ -211,8 +262,8 @@ const createProductSet = async (product: CombinedProduct) => {
                     }
                   },
                 },
-                metafields: updatedVariant?.metafields?.length > 0 ? 
-                  updatedVariant?.metafields?.filter((metafield: Metafield) => 
+                metafields: updatedVariant?.metafields?.nodes?.length > 0 ? 
+                  updatedVariant?.metafields?.nodes?.filter((metafield: Metafield) => 
                     metafield.key !== "harmonized_system_code"
                   ).map((metafield: Metafield) => ({
                     namespace: metafield?.namespace,
@@ -256,57 +307,117 @@ const createProductSet = async (product: CombinedProduct) => {
   const productCreateData = await productSetRes.json();
 
   if (productCreateData?.data?.productSet?.userErrors?.length > 0) {
-    console.error("Product Creation Errors:", productCreateData.data.productSet.userErrors);
-    throw new Error("Product Creation Failed: " + JSON.stringify(productCreateData.data.productSet.userErrors));
+    const mutationErrors = productCreateData?.data?.productSet?.userErrors?.map((error: {message: string}) => 
+      error?.message
+    )?.join(', ');
+    console.error("Product Creation Mutation User Errors: ", mutationErrors);
+
+    return {
+      success: false,
+      productSetData: productCreateData?.data?.productSet?.product,
+      product: product?.productData,
+      productSetInput: productSetInput,
+      errors: mutationErrors,
+    };
+  } else if (productCreateData?.errors?.length > 0) {
+    const errorMessages = productCreateData?.errors?.map((error: {message: string}) => 
+      error?.message
+    )?.join(', ');
+    console.log("Product Creation Errors: ", errorMessages);
+    console.error("Product Creation Errors: ", errorMessages);
+
+    return {
+      success: false,
+      productSetData: productCreateData?.data?.productSet?.product,
+      product: product?.productData,
+      productSetInput: productSetInput,
+      errors: errorMessages,
+    };
   };
 
   return {
-    productSetInput,
+    success: true,
     productSetData: productCreateData?.data?.productSet?.product,
     product: product?.productData,
+    productSetInput: productSetInput,
+    errors: null,
   };
 };
 
 export async function POST(request: Request) {
-  const updates = {
-    successfulUpdates: [] as {productId: string, title: string}[],
-    failedUpdates: [] as {title: string, error: string}[]
-  };
+  
+  const productResults = [];
 
   try {
-    const {products}: {products: CombinedProduct[]} = await request.json();
+    const {products}: {products: CombinedMerchProduct[]} = await request.json();
     
     for (const product of products) {
       try {
         const result = await createProductSet(product);
-        updates.successfulUpdates.push({
+        
+        const productResult: {
+          productId: string | undefined;
+          title: string | undefined;
+          errors: string | null;
+          input: unknown;
+          deletedProducts: Array<{
+            success: boolean; 
+            productId: string; 
+            errors: string | null
+          }> | null;
+        } = {
           productId: result?.productSetData?.id,
-          title: product?.productData?.baseTitle
-        });
-      } catch (error) {
-        updates.failedUpdates.push({
           title: product?.productData?.baseTitle,
-          error: error instanceof Error ? error.message : String(error)
+          input: result?.productSetInput,
+          errors: result?.errors,
+          deletedProducts: null,
+        };
+
+        /** Delete Old Products **/
+        if (result?.success) {
+          const productIdsToDelete = product?.productData?.variants?.map(variant => 
+            variant?.oldProductId
+          )?.filter((result) => result !== null || result !== undefined) as string[];
+
+          const deletedNonMergedMerchProducts = await deleteNonMergedMerchProducts(productIdsToDelete);
+          
+          /** Add deleted products info to the same product result object **/
+          productResult.deletedProducts = deletedNonMergedMerchProducts;
+        }
+
+        productResults.push(productResult);
+      } catch (error) {
+        productResults.push({
+          title: product?.productData?.baseTitle,
+          error: error instanceof Error ? error.message : String(error),
+          deletedProducts: null
         });
-      }
-    }
+      };
+    };
+
+    const updateResults = {
+      productResults: productResults
+    };
 
     /** Save updates to file **/
     await fs.mkdir(path.dirname(UPDATES_FILE_PATH), {recursive: true});
     await fs.writeFile(
       UPDATES_FILE_PATH,
-      JSON.stringify(updates, null, 2)
+      JSON.stringify(
+        updateResults, 
+        null, 
+        2
+      )
     );
 
-    return NextResponse.json(
-      {
-        message: "Products Processing Complete",
-        updates
-      },
-      {status: 200}
-    );
+    return NextResponse.json({
+      message: "Products Processing Complete",
+      updates: updateResults,
+    }, {status: 200});
   } catch (error) {
     console.error("Error processing products: ", error);
-    return NextResponse.json({ error: `Error processing products: ${error}` }, { status: 500 });
+    return NextResponse.json({
+      error: `Error processing products: ${error}`
+    }, {status: 500});
   }
 }
