@@ -13,26 +13,6 @@ import {
 /** Types **/
 import type {GetMergeProductsResponse} from "@/lib/types";
 
-/**
- * Products To Test With
- * 
- * @title - Farewell Tour x Gibson Clean Longsleeve Tee
- * 
- * @variant - Black Long Sleeve
- * GA-FWT-BLKLSTLG
- * GA-FWT-BLKLST2X
- * GA-FWT-BLKLSTSM
- * GA-FWT-BLKLSTMD
- * GA-FWT-BLKLSTXL
- * 
- * @variant - White Long Sleeve
- * GA-FWT-WHTLSTLG
- * GA-FWT-WHTLST2X
- * GA-FWT-WHTLSTMD
- * GA-FWT-WHTLSTSM
- * GA-FWT-WHTLSTXL
- */
-
 export default function Home() {
   const [skus, setSkus] = useState<string[]>(['']);
   const [isLoading, setIsLoading] = useState(false);

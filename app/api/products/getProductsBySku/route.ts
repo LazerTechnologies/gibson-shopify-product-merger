@@ -215,8 +215,8 @@ export async function POST(request: Request) {
         description: baseProduct.description,
         metafields: baseProduct.metafields?.nodes,
         options: [
-          { name: 'Size', values: sizes.length > 0 ? sizes : ['Default'] },
-          { name: 'Color', values: colors.length > 0 ? colors : ['Default'] }
+          {name: 'Size', values: sizes.length > 0 ? sizes : ['Default']},
+          {name: 'Color', values: colors.length > 0 ? colors : ['Default']}
         ],
         variants: products.map(p => {
           const variantColor = p.processedInfo.color || 'Default';

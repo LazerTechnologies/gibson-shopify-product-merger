@@ -217,3 +217,13 @@ export interface VariantCreateResponse {
     };
   };
 };
+
+export interface NewCombinedProduct {
+  baseTitle: string;
+  variants: {
+    size: string;
+    originalProduct: ProductNode;
+  }[];
+  vendor: string;
+  productType: string;
+};

@@ -1,11 +1,13 @@
 /** Size patterns to match in titles **/
 export const SIZE_PATTERNS = {
-  "3XL": /\b(3XL|XXXL)\b/i,
-  "2XL": /\b(2XL|XXL)\b/i,
+  "4XL": /\b(4XL|XXXXL)\b/i,
+  "3XL": /\b(3XL|XXXL|3X)\b/i,
+  "2XL": /\b(2XL|XXL|2X)\b/i,
   "Extra Large": /\b(Extra Large|XLarge|X-Large|XL)\b/i,
-  Large: /\b(Large|L)\b/i,
-  Medium: /\b(Medium|Med|M)\b/i,
-  Small: /\b(Small|Sm|S)\b/i,
+  Large: /\b(Large|L|LG)\b/i,
+  Medium: /\b(Medium|Med|M|MD)\b/i,
+  Small: /\b(Small|Sm|S|SM)\b/i,
+  "Extra Small": /\b(Extra Small|XSmall|XS|XXS)\b/i,
 };
 
 /** Color patterns to match in product titles **/
