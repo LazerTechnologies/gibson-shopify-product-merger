@@ -227,3 +227,44 @@ export interface NewCombinedProduct {
   vendor: string;
   productType: string;
 };
+
+export interface NonMergedMerchProductNode {
+  id: string;
+  title: string;
+  vendor: string;
+  handle: string;
+  createdAt: string;
+  updatedAt: string;
+  publishedAt: string;
+  productType: string;
+  status: string;
+  description: string;
+  descriptionHtml: string;
+  tags: string[];
+  metafields: {
+    nodes: Metafield[];
+  };
+  seo: {
+    title: string;
+    description: string;
+  };
+  featuredMedia: {
+    id: string;
+    preview: {
+      image: {
+        url: string;
+        altText: string;
+      };
+    };
+  };
+  media: {
+    edges: {
+      node: MediaImage;
+    }[];
+  };
+  variants: {
+    edges: {
+      node: ProductVariant;
+    }[];
+  };
+};

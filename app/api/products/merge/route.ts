@@ -77,10 +77,10 @@ const createProductSet = async (product: CombinedProduct) => {
         {color: '', count: Infinity}
       );
 
-    if (minColor.color) {
+    if (minColor?.color) {
       variantWithLeastOccurrences = product.productData.variants.find(v => v.color === minColor.color);
-    }
-  }
+    };
+  };
 
   /** Get all unique images and update their alt text **/
   const mediaFromProduct = product?.productData?.media?.edges?.map(media => ({

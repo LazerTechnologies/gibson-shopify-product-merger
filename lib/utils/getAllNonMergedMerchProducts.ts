@@ -1,5 +1,5 @@
 /** Types **/
-import type {ProductNode} from "../types";
+import type {NonMergedMerchProductNode} from "@/lib/types/ShopifyData";
 
 /** Queries **/
 import {queryGetAllNonMergedMerchProducts} from "@/queries";
@@ -11,7 +11,7 @@ export const getAllNonMergedMerchProducts = async (
   try {
     let hasNextPage = true;
     let endCursor = null;
-    let products: ProductNode[] = [];
+    let products: NonMergedMerchProductNode[] = [];
 
     while (hasNextPage) {
       const query = queryGetAllNonMergedMerchProducts(endCursor);
@@ -36,7 +36,7 @@ export const getAllNonMergedMerchProducts = async (
         throw new Error(`GraphQL Error: ${errorMessages}`);
       }
 
-      const fetchedProducts = data?.data?.products?.edges?.map((edge: {node: ProductNode}) => edge.node) ?? [];
+      const fetchedProducts = data?.data?.products?.edges?.map((edge: {node: NonMergedMerchProductNode}) => edge.node) ?? [];
       products = [...products, ...fetchedProducts];
 
       hasNextPage = data?.data?.products?.pageInfo?.hasNextPage ?? false;

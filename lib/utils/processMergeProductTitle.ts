@@ -20,6 +20,16 @@ export const processMergeProductTitle = (title: string, sku: string): {
     };
   };
 
+  /** If no size found in title, check SKU **/
+  if (!foundSize && sku) {
+    for (const [size, pattern] of Object.entries(SIZE_PATTERNS)) {
+      if (pattern.test(sku)) {
+        foundSize = size;
+        break;
+      };
+    };
+  };
+
   /** Find color match from title first **/
   for (const [color, pattern] of Object.entries(TITLE_COLOR_PATTERNS)) {
     if (pattern.test(workingTitle)) {
